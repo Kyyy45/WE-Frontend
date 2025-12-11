@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
-import { UserProfile, AdminUpdateUserRequest } from "@/types/user"; // Tambah AdminUpdateUserRequest
+import { UserProfile, AdminUpdateUserRequest } from "@/types/user";
 import { ApiError } from "@/services/api";
 import { toast } from "sonner";
 import { useLogout } from "@/hooks/useAuth";
@@ -31,6 +31,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -38,7 +48,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2, MoreHorizontal, Search, Trash, Edit } from "lucide-react";
+import { Loader2, MoreHorizontal, Search, Trash, Edit, ShieldAlert } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function AdminUsersPage() {
@@ -48,6 +58,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserProfile | null>(null); // State untuk dialog hapus
 
   const { data: meData } = useQuery({
     queryKey: ["me"],
@@ -61,17 +72,21 @@ export default function AdminUsersPage() {
     queryFn: () => userService.adminListUsers({ page, limit: 10, search }),
   });
 
-  // Helper untuk akses data yang aman (karena response.data berisi PaginatedResult)
   const userList = response?.data; 
 
   // Mutation Delete
-  const { mutate: deleteUser } = useMutation({
+  const { mutate: deleteUser, isPending: isDeleting } = useMutation({
     mutationFn: (id: string) => userService.adminDeleteUser(id),
     onSuccess: () => {
       toast.success("User berhasil dihapus");
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      setDeletingUser(null); // Tutup dialog
     },
-    onError: (err: ApiError) => toast.error(err.message),
+    onError: (err: ApiError) => {
+      // Backend akan mengirim pesan spesifik (misal: "Super Admin tidak bisa dihapus")
+      toast.error(err.message || "Gagal menghapus user");
+      setDeletingUser(null);
+    },
   });
 
   // Mutation Update
@@ -84,17 +99,13 @@ export default function AdminUsersPage() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setEditingUser(null);
 
-      // Jika user yang diedit adalah DIRI SENDIRI
+      // Logika Logout jika edit diri sendiri & ganti role
       if (currentUser && variables.id === currentUser.id) {
-        // Dan jika role-nya diubah (misal jadi 'user')
         if (variables.data.role && variables.data.role !== currentUser.role) {
             toast.warning("Status akun Anda berubah. Mohon login kembali.", {
                 duration: 3000,
             });
-            // Paksa Logout agar token lama hangus
-            setTimeout(() => {
-                logout();
-            }, 1000);
+            setTimeout(() => logout(), 1000);
         }
       }
     },
@@ -106,7 +117,6 @@ export default function AdminUsersPage() {
     if (!editingUser) return;
     const formData = new FormData(e.currentTarget);
     
-    // Konversi FormData ke Object yang sesuai tipe
     const payload: AdminUpdateUserRequest = {
       fullName: formData.get("fullName") as string,
       username: formData.get("username") as string,
@@ -114,17 +124,14 @@ export default function AdminUsersPage() {
       status: formData.get("status") as "pending" | "active" | "suspended",
     };
 
-    updateUser({
-      id: editingUser.id,
-      data: payload,
-    });
+    updateUser({ id: editingUser.id, data: payload });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold font-jakarta">Manajemen User</h1>
-        <div className="relative w-64">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Cari user..."
@@ -158,72 +165,82 @@ export default function AdminUsersPage() {
               </TableRow>
             ) : !userList?.items || userList.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   Tidak ada data user.
                 </TableCell>
               </TableRow>
             ) : (
-              // PERBAIKAN: Akses userList.items (bukan response.items)
-              userList.items.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.avatarUrl || ""} />
-                      <AvatarFallback>{user.fullName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{user.fullName}</span>
-                      <span className="text-xs text-muted-foreground">{user.email}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                        variant="outline" 
-                        className={
-                            user.status === 'active' ? 'text-green-600 border-green-600' : 
-                            user.status === 'suspended' ? 'text-red-600 border-red-600' : 
-                            'text-yellow-600 border-yellow-600'
-                        }
-                    >
-                        {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="capitalize">{user.authProvider}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            onClick={() => {
-                                if(confirm("Yakin hapus user ini?")) deleteUser(user.id)
-                            }} 
-                            className="text-red-600"
-                        >
-                          <Trash className="mr-2 h-4 w-4" /> Hapus
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+              userList.items.map((user) => {
+                // Cek apakah ini diri sendiri
+                const isMe = currentUser?.id === user.id;
+
+                return (
+                  <TableRow key={user.id} className={isMe ? "bg-muted/30" : ""}>
+                    <TableCell className="flex items-center gap-3">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.avatarUrl || ""} />
+                        <AvatarFallback>{user.fullName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-medium flex items-center gap-2">
+                          {user.fullName}
+                          {isMe && <Badge variant="secondary" className="text-[10px] h-5">You</Badge>}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                          variant="outline" 
+                          className={
+                              user.status === 'active' ? 'text-green-600 border-green-600' : 
+                              user.status === 'suspended' ? 'text-red-600 border-red-600' : 
+                              'text-yellow-600 border-yellow-600'
+                          }
+                      >
+                          {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="capitalize text-sm text-muted-foreground">
+                        {user.authProvider}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          
+                          {/* UX: Disable tombol hapus jika itu diri sendiri */}
+                          <DropdownMenuItem 
+                              onClick={() => setDeletingUser(user)} 
+                              className="text-red-600 focus:text-red-600"
+                              disabled={isMe} 
+                          >
+                            <Trash className="mr-2 h-4 w-4" /> 
+                            {isMe ? "Hapus (Disabled)" : "Hapus"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Pagination Simple */}
       <div className="flex justify-end gap-2">
         <Button 
             variant="outline" 
@@ -235,14 +252,13 @@ export default function AdminUsersPage() {
         <Button 
             variant="outline"
             onClick={() => setPage(p => p + 1)}
-            // PERBAIKAN: Akses totalPages via userList
             disabled={!userList || page >= userList.totalPages || isLoading}
         >
             Next
         </Button>
       </div>
 
-      {/* Dialog Edit User */}
+      {/* --- DIALOG EDIT --- */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>
           <DialogHeader>
@@ -262,9 +278,7 @@ export default function AdminUsersPage() {
                 <div className="grid gap-2">
                     <Label>Role</Label>
                     <Select name="role" defaultValue={editingUser.role}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="user">User</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
@@ -274,9 +288,7 @@ export default function AdminUsersPage() {
                 <div className="grid gap-2">
                     <Label>Status</Label>
                     <Select name="status" defaultValue={editingUser.status}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="active">Active</SelectItem>
                             <SelectItem value="pending">Pending</SelectItem>
@@ -295,6 +307,36 @@ export default function AdminUsersPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* --- ALERT DIALOG DELETE (Pengganti window.confirm) --- */}
+      <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                <ShieldAlert className="h-5 w-5" />
+                Hapus User?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda yakin ingin menghapus user <strong>{deletingUser?.fullName}</strong>? <br/>
+              Tindakan ini tidak dapat dibatalkan dan semua data terkait (enrollment, pembayaran) mungkin akan terpengaruh.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+            <AlertDialogAction 
+                onClick={(e) => {
+                    e.preventDefault(); // prevent auto close, tunggu mutation selesai
+                    if (deletingUser) deleteUser(deletingUser.id);
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={isDeleting}
+            >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ya, Hapus"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
