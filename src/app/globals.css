@@ -3,6 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* Membuat class: font-jakarta */
+  --font-jakarta: var(--font-jakarta), ui-sans-serif, system-ui;
+
+  /* Membuat class: font-inter */
+  --font-inter: var(--font-inter), ui-sans-serif, system-ui;
+  
+  /* OPSIONAL: Kalau mau Jakarta jadi default font (font-sans) */
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

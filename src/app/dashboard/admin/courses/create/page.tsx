@@ -44,8 +44,6 @@ export default function CreateCoursePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // 1. Setup Form
-  // Tipe form otomatis mengikuti CourseSchema dari Zod
   const form = useForm<CourseSchema>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -57,13 +55,8 @@ export default function CreateCoursePage() {
     },
   });
 
-  // Gunakan useWatch agar re-render efisien saat switch berubah
-  const isFree = useWatch({
-    control: form.control,
-    name: "isFree",
-  });
+  const isFree = useWatch({ control: form.control, name: "isFree" });
 
-  // 2. Mutation Create
   const { mutate: createCourse, isPending } = useMutation({
     mutationFn: (data: CourseSchema) => courseService.createCourse(data),
     onSuccess: () => {
@@ -76,12 +69,10 @@ export default function CreateCoursePage() {
     },
   });
 
-  // 3. Handle Submit
   const onSubmit = (data: CourseSchema) => {
-    // Pastikan logika harga 0 jika gratis
     const payload = {
       ...data,
-      price: data.isFree ? 0 : data.price,
+      price: data.isFree ? 0 : Number(data.price),
     };
     createCourse(payload);
   };
@@ -101,14 +92,13 @@ export default function CreateCoursePage() {
         <CardHeader>
           <CardTitle>Informasi Kursus</CardTitle>
           <CardDescription>
-            Isi detail kursus baru yang ingin Anda tambahkan ke platform.
+            Thumbnail dapat diunggah setelah kursus berhasil dibuat.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
-              {/* Judul */}
               <FormField
                 control={form.control}
                 name="title"
@@ -123,7 +113,6 @@ export default function CreateCoursePage() {
                 )}
               />
 
-              {/* Deskripsi */}
               <FormField
                 control={form.control}
                 name="description"
@@ -131,10 +120,9 @@ export default function CreateCoursePage() {
                   <FormItem>
                     <FormLabel>Deskripsi</FormLabel>
                     <FormControl>
-                      {/* Handle value undefined dengan string kosong */}
                       <Textarea 
-                        placeholder="Jelaskan secara singkat tentang kursus ini..." 
-                        className="resize-none min-h-[100px]"
+                        placeholder="Tuliskan materi pembelajaran (Gunakan Enter untuk baris baru)" 
+                        className="resize-none min-h-[150px]" // Lebih tinggi
                         {...field} 
                         value={field.value || ""} 
                       />
@@ -145,7 +133,6 @@ export default function CreateCoursePage() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Level */}
                 <FormField
                   control={form.control}
                   name="level"
@@ -160,9 +147,9 @@ export default function CreateCoursePage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="bk_paud">PAUD / TK</SelectItem>
-                          <SelectItem value="sd">SD (Sekolah Dasar)</SelectItem>
-                          <SelectItem value="smp">SMP (Sekolah Menengah Pertama)</SelectItem>
-                          <SelectItem value="sma">SMA (Sekolah Menengah Atas)</SelectItem>
+                          <SelectItem value="sd">SD</SelectItem>
+                          <SelectItem value="smp">SMP</SelectItem>
+                          <SelectItem value="sma">SMA</SelectItem>
                           <SelectItem value="umum">Umum</SelectItem>
                         </SelectContent>
                       </Select>
@@ -171,7 +158,6 @@ export default function CreateCoursePage() {
                   )}
                 />
 
-                {/* Switch Gratis */}
                 <FormField
                   control={form.control}
                   name="isFree"
@@ -179,16 +165,13 @@ export default function CreateCoursePage() {
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                       <div className="space-y-0.5">
                         <FormLabel>Kursus Gratis?</FormLabel>
-                        <FormDescription>
-                          Aktifkan jika kursus ini tidak dipungut biaya.
-                        </FormDescription>
+                        <FormDescription>Aktifkan jika tanpa biaya.</FormDescription>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={(checked) => {
                             field.onChange(checked);
-                            // Optional: Reset harga visual jadi 0
                             if (checked) form.setValue("price", 0);
                           }}
                         />
@@ -198,7 +181,6 @@ export default function CreateCoursePage() {
                 />
               </div>
 
-              {/* Harga */}
               {!isFree && (
                 <FormField
                   control={form.control}
@@ -208,16 +190,22 @@ export default function CreateCoursePage() {
                       <FormLabel>Harga (Rp) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input 
-                          type="number" 
+                          type="text" // Ubah ke text agar bisa handle kosong dengan baik
+                          inputMode="numeric"
                           placeholder="0" 
                           {...field}
-                          // PENTING: valueAsNumber agar Zod menerima angka, bukan string
-                          onChange={(e) => field.onChange(e.target.valueAsNumber)} 
-                          value={field.value ?? 0}
+                          value={field.value === 0 ? "" : field.value} // Tampilkan string kosong jika 0 agar user mudah mengetik
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            // Hanya terima angka
+                            if (/^\d*$/.test(val)) {
+                                field.onChange(val === "" ? 0 : Number(val));
+                            }
+                          }}
                         />
                       </FormControl>
                       <FormDescription>
-                        Masukkan nominal harga dalam Rupiah.
+                        Masukkan nominal harga (Contoh: 50000).
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

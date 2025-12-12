@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body
-        className={`${fontJakarta.variable} ${fontInter.variable} font-sans antialiased bg-background text-foreground`}
+        className={`${fontJakarta.variable} ${fontInter.variable} antialiased bg-background text-foreground`}
       >
         {/* Bungkus seluruh aplikasi dengan Providers tunggal */}
         <Providers>
