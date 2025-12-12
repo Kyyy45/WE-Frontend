@@ -37,7 +37,7 @@ export function NavUser({ user }: NavUserProps) {
 
   const avatarUrl = user.avatar
     ? user.avatar
-    : `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(user.name)}`;
+    : `https://api.dicebear.com/9.x/big-smile/svg?seed=${encodeURIComponent(user.name)}`;
 
   // Ambil inisial nama untuk Fallback (jika gambar gagal load total)
   const initials = user.name

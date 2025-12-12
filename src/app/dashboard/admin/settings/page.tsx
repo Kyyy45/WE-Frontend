@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Upload, Eye, EyeOff } from "lucide-react"; // Tambah import Eye & EyeOff
+import { Loader2, Upload, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,19 +38,16 @@ import {
 } from "@/schemas/user.schema";
 
 export default function SettingsPage() {
-  // 1. Fetch Data User
   const { data: userProfile, isLoading } = useQuery({
     queryKey: ["me"],
     queryFn: () => userService.getMe(),
   });
   const user = userProfile?.data;
 
-  // 2. Tab State
   const [activeTab, setActiveTab] = useState("profile");
 
   if (isLoading) return <div>Loading...</div>;
 
-  // Cek apakah user login via Google
   const isGoogleUser = user?.authProvider === "google";
 
   return (
@@ -74,8 +71,8 @@ export default function SettingsPage() {
           )}
         </TabsList>
 
-        {/* TAB 1: EDIT PROFILE */}
         <div className="mt-4">
+          {/* TAB 1: EDIT PROFILE */}
           <TabsContent value="profile">
             <Card>
               <CardHeader>
@@ -85,10 +82,7 @@ export default function SettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Upload Avatar Section */}
                 <AvatarUpload user={user} />
-
-                {/* Form Update Username */}
                 <ProfileForm user={user} />
               </CardContent>
             </Card>
@@ -116,64 +110,99 @@ export default function SettingsPage() {
   );
 }
 
-// --- SUB-COMPONENT: AVATAR UPLOAD ---
+// --- SUB-COMPONENT: AVATAR UPLOAD (WITH PREVIEW) ---
 function AvatarUpload({ user }: { user: UserProfile | undefined }) {
   const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
-    // Validasi Client Side Basic
-    if (file.size > 2 * 1024 * 1024) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (selectedFile.size > 2 * 1024 * 1024) {
       toast.error("Ukuran file maksimal 2MB");
       return;
     }
+
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setFile(selectedFile);
+    setPreview(objectUrl);
+    
+    e.target.value = "";
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
 
     setIsUploading(true);
     try {
       await userService.updateAvatar(file);
       toast.success("Foto profil berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: ["me"] });
+      
+      setFile(null);
+      setPreview(null);
     } catch (error) {
-      const msg =
-        error instanceof Error ? error.message : "Gagal upload avatar";
+      const msg = error instanceof Error ? error.message : "Gagal upload avatar";
       toast.error(msg);
     } finally {
       setIsUploading(false);
     }
   };
 
+  const handleCancel = () => {
+    setFile(null);
+    setPreview(null);
+  };
+
   return (
     <div className="flex items-center gap-6">
       <Avatar className="h-20 w-20 border-2 border-muted">
-        <AvatarImage src={user?.avatarUrl || ""} />
+        <AvatarImage src={preview || user?.avatarUrl || ""} />
         <AvatarFallback>
           {user?.fullName?.substring(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
+      
       <div className="flex flex-col gap-2">
-        <Button
-          variant="outline"
-          className="relative cursor-pointer"
-          disabled={isUploading}
-        >
-          {isUploading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
+        {file ? (
+          <div className="flex gap-2">
+            <Button onClick={handleUpload} disabled={isUploading}>
+              {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isUploading ? "Menyimpan..." : "Simpan Foto"}
+            </Button>
+            <Button variant="ghost" onClick={handleCancel} disabled={isUploading}>
+              Batal
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            className="relative cursor-pointer"
+            disabled={isUploading}
+          >
             <Upload className="mr-2 h-4 w-4" />
-          )}
-          {isUploading ? "Mengupload..." : "Ganti Foto"}
-          <input
-            type="file"
-            className="absolute inset-0 cursor-pointer opacity-0"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileChange}
-          />
-        </Button>
+            Ganti Foto
+            <input
+              type="file"
+              className="absolute inset-0 cursor-pointer opacity-0"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+            />
+          </Button>
+        )}
+        
         <p className="text-xs text-muted-foreground">
-          JPG, PNG, atau WEBP. Maks 2MB.
+          {file ? `File terpilih: ${file.name}` : "JPG, PNG, atau WEBP. Maks 2MB."}
         </p>
       </div>
     </div>
@@ -238,7 +267,7 @@ function ProfileForm({ user }: { user: UserProfile | undefined }) {
   );
 }
 
-// --- SUB-COMPONENT: PASSWORD FORM (UPDATED) ---
+// --- SUB-COMPONENT: PASSWORD FORM ---
 function PasswordForm() {
   const form = useForm<ChangePasswordSchema>({
     resolver: zodResolver(changePasswordSchema),
@@ -266,7 +295,6 @@ function PasswordForm() {
         onSubmit={form.handleSubmit((v) => changePass(v))}
         className="space-y-4 max-w-lg"
       >
-        {/* Old Password */}
         <FormField
           control={form.control}
           name="oldPassword"
@@ -300,7 +328,6 @@ function PasswordForm() {
           )}
         />
 
-        {/* New Password */}
         <FormField
           control={form.control}
           name="newPassword"
@@ -334,7 +361,6 @@ function PasswordForm() {
           )}
         />
 
-        {/* Confirm Password */}
         <FormField
           control={form.control}
           name="confirmPassword"
