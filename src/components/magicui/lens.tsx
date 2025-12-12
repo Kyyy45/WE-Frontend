@@ -105,7 +105,7 @@ export function Lens({
         </div>
       </motion.div>
     )
-  }, [currentPosition, lensSize, lensColor, zoomFactor, children, duration])
+  }, [currentPosition, duration, maskImage, zoomFactor, children])
 
   return (
     <div
