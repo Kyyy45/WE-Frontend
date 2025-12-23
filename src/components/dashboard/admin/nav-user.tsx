@@ -1,5 +1,9 @@
 "use client"
 
+import { useRouter } from "next/navigation" // Tambahan 1: Untuk redirect
+import { useAuthStore } from "@/stores/auth-store" // Tambahan 2: Reset state
+import { api } from "@/lib/axios" // Tambahan 3: API call
+
 import {
   BadgeCheck,
   Bell,
@@ -40,6 +44,27 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  
+  // --- LOGIC LOGOUT DIMULAI DI SINI ---
+  const router = useRouter()
+  const logoutStore = useAuthStore((state) => state.logout)
+
+  const handleLogout = async () => {
+    try {
+      // Coba kontak backend
+      await api.post('/auth/logout')
+    } catch (error) {
+      console.error("Logout error (Backend mungkin mati/unreachable):", error)
+      // Opsional: Hapus cookie client-side jika bukan HttpOnly (tapi punya Anda HttpOnly, jadi ini tidak efek banyak)
+      document.cookie = 'refreshToken=; Max-Age=0; path=/;';
+    } finally {
+      // Apapun yang terjadi (sukses/error), bersihkan state dan pindah halaman
+      logoutStore()
+      router.push('/login') 
+      router.refresh() // Paksa refresh agar middleware mendeteksi perubahan
+    }
+  }
+  // --- LOGIC SELESAI ---
 
   return (
     <SidebarMenu>
@@ -102,10 +127,13 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            
+            {/* --- PASANG EVENT ONCLICK DISINI --- */}
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>
+
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
