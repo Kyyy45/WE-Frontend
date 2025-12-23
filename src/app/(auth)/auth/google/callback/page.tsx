@@ -1,55 +1,56 @@
 'use client';
 
 import { useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth-store';
+import { useSearchParams, useRouter } from 'next/navigation'; 
+import { useAuthStore } from '@/stores/auth-store'; //
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+// import { api } from '@/lib/axios'; // Uncomment jika sudah ada fetch profile
 
-function GoogleCallback() {
-  const router = useRouter();
+function GoogleCallbackContent() {
   const searchParams = useSearchParams();
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken); //
+  const router = useRouter();
 
   useEffect(() => {
-    // 1. Ambil Token dari URL yang dikirim backend
-    const accessToken = searchParams.get('accessToken');
+    const accessToken = searchParams.get('accessToken'); //
     const error = searchParams.get('error');
 
     if (error) {
+       console.error("Google Auth Error:", error);
        toast.error("Gagal login dengan Google");
-       router.push('/login');
+       router.replace('/login');
        return;
     }
 
     if (accessToken) {
-      // 2. Simpan token ke Store
-      setAccessToken(accessToken);
+      // 1. Simpan Access Token ke State (Memory)
+      useAuthStore.getState().setAccessToken(accessToken);
       
-      toast.success("Login Google berhasil!");
+      toast.success("Login berhasil!");
       
-      // 3. Redirect ke dashboard
-      // Note: Data user (profile) akan di-fetch otomatis nanti di layout dashboard 
-      // atau bisa fetch manual di sini jika mau.
-      router.push('/dashboard');
+      // 2. PERBAIKAN UTAMA: Gunakan Hard Navigation
+      // Jangan pakai router.push('/dashboard'). 
+      // Router Next.js terlalu cepat, Middleware belum melihat cookie baru.
+      window.location.href = '/dashboard'; 
+      
     } else {
-       // Jika tidak ada token, kembali ke login
-       router.push('/login');
+       router.replace('/login');
     }
-  }, [router, searchParams, setAccessToken]);
+  }, [searchParams, setAccessToken, router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-      <p className="text-gray-500">Memproses login Google...</p>
+      <p className="text-gray-500 font-medium">Sedang memverifikasi data Google...</p>
     </div>
   );
 }
 
 export default function Page() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <GoogleCallback />
+        <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+            <GoogleCallbackContent />
         </Suspense>
     )
 }

@@ -1,4 +1,3 @@
-
 import { AuthImage } from "@/components/auth/auth-image";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";

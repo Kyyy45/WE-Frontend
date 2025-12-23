@@ -1,12 +1,16 @@
-import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '@/stores/auth-store';
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
+import { useAuthStore } from "@/stores/auth-store";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export const api = axios.create({
   baseURL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: true, // PENTING: Agar cookie (refreshToken) dikirim/diterima
 });
@@ -16,7 +20,7 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Ambil token dari Zustand Store (Memory)
     const token = useAuthStore.getState().accessToken;
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -54,13 +58,17 @@ const processQueue = (error: unknown, token: string | null = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // Jika error 401 (Unauthorized) dan belum pernah retry
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
       // Cek apakah url yang error adalah url login/refresh itu sendiri, jika iya jangan loop
-      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+      if (
+        originalRequest.url?.includes("/auth/login") ||
+        originalRequest.url?.includes("/auth/refresh")
+      ) {
         return Promise.reject(error);
       }
 
@@ -76,8 +84,8 @@ api.interceptors.response.use(
       try {
         // Tembak endpoint refresh backend Anda
         // Backend mengharapkan refresh token dari cookie (handled by withCredentials: true)
-        const { data } = await api.post('/auth/refresh');
-        
+        const { data } = await api.post("/auth/refresh");
+
         // Backend auth.controller.ts mengembalikan { accessToken } di dalam data
         const newAccessToken = data.data.accessToken;
 
@@ -86,11 +94,10 @@ api.interceptors.response.use(
 
         // Lanjut proses request yang tertunda
         processQueue(null, newAccessToken);
-        
+
         // Update header request yang gagal tadi dengan token baru
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
-
       } catch (refreshError) {
         processQueue(refreshError, null);
         // Jika refresh gagal (token expired habis), logout user

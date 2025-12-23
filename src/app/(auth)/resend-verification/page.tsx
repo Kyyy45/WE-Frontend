@@ -1,9 +1,9 @@
+import { ResendVerificationForm } from "@/components/auth/resend-verification-form";
 import { AuthImage } from "@/components/auth/auth-image";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";
-import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
-export default function ForgotPasswordPage() {
+export default function ResendPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <ForgotPasswordForm />
+            <ResendVerificationForm />
           </div>
         </div>
       </div>

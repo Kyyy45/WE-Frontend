@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { User } from '@/types/user';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  
+
   // Actions
   setAuth: (user: User, accessToken: string) => void;
   setAccessToken: (token: string) => void;
@@ -21,23 +21,22 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       isAuthenticated: false,
 
-      setAuth: (user, accessToken) => 
+      setAuth: (user, accessToken) =>
         set({ user, accessToken, isAuthenticated: true }),
 
-      setAccessToken: (accessToken) => 
-        set({ accessToken }),
+      setAccessToken: (accessToken) => set({ accessToken }),
 
-      updateUser: (updates) => 
+      updateUser: (updates) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         })),
 
-      logout: () => 
+      logout: () =>
         set({ user: null, accessToken: null, isAuthenticated: false }),
     }),
     {
-      name: 'we-auth-storage', // Nama key di LocalStorage
-      // Kita persist User info agar UI tidak "flicker", 
+      name: "we-auth-storage", // Nama key di LocalStorage
+      // Kita persist User info agar UI tidak "flicker",
       // tapi accessToken idealnya di memory (untuk security max).
       // Namun untuk kemudahan development awal, kita persist semua dulu.
     }

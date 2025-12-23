@@ -8,10 +8,7 @@ interface AuthImageProps {
   className?: string;
 }
 
-export function AuthImage({
-  alt = "Auth Image",
-  className
-}: AuthImageProps) {
+export function AuthImage({ alt = "Auth Image", className }: AuthImageProps) {
   return (
     <div className={cn("bg-muted relative hidden lg:block", className)}>
       <img

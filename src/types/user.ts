@@ -1,6 +1,6 @@
-export type UserRole = 'user' | 'admin';
-export type UserStatus = 'pending' | 'active' | 'suspended';
-export type AuthProvider = 'local' | 'google';
+export type UserRole = "user" | "admin";
+export type UserStatus = "pending" | "active" | "suspended";
+export type AuthProvider = "local" | "google";
 
 export interface User {
   _id: string;
