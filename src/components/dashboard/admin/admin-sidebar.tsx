@@ -1,175 +1,101 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
-  AudioWaveform,
   BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
   Settings2,
-  SquareTerminal,
-} from "lucide-react"
+  Users,
+} from "lucide-react";
 
-import { NavAdmin } from "@/components/dashboard/admin/nav-admin"
-import { NavProjects } from "@/components/dashboard/admin/nav-projects"
-import { NavUser } from "@/components/dashboard/admin/nav-user"
-import { TeamSwitcher } from "@/components/dashboard/admin/team-switcher"
+import { NavMain } from "@/components/dashboard/nav-main";
+import { NavUser } from "@/components/dashboard/admin/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { Logo } from "@/components/layout/logo";
+import { useAuthStore } from "@/stores/auth-store";
 
-// This is sample data.
+// Menu Data untuk Admin
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
+      title: "Dashboard",
+      url: "/dashboard/admin",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Kelola Pengguna",
+      url: "/dashboard/admin/users",
+      icon: Users,
       items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
+        { title: "Daftar User", url: "/dashboard/admin/users" },
+        { title: "Admin & Staff", url: "/dashboard/admin/users/staff" },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
+      title: "Kursus & Materi",
+      url: "/dashboard/admin/courses",
       icon: BookOpen,
       items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
+        { title: "Semua Kursus", url: "/dashboard/admin/courses" },
+        { title: "Tambah Kursus", url: "/dashboard/admin/courses/new" },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      title: "Keuangan",
+      url: "/dashboard/admin/payments",
+      icon: CreditCard,
       items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
+        { title: "Transaksi", url: "/dashboard/admin/payments" },
+        { title: "Pendaftaran", url: "/dashboard/admin/enrollments" },
       ],
     },
-  ],
-  projects: [
     {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
+      title: "Formulir",
+      url: "/dashboard/admin/forms",
+      icon: FileText,
     },
     {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
+      title: "Pengaturan",
+      url: "/dashboard/admin/settings",
+      icon: Settings2,
     },
   ],
-}
+};
 
-export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AdminSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuthStore();
+
+  // Fallback data agar tidak crash saat loading
+  const userData = {
+    name: user?.fullName || "Admin",
+    email: user?.email || "admin@we.com",
+    avatar: user?.avatarUrl || "",
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <div className="flex items-center gap-2 px-2 py-2">
+          <Logo />
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavAdmin items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={data.navMain} label="Admin Area" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={userData} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

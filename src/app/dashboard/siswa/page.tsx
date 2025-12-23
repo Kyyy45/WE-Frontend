@@ -1,55 +1,40 @@
-import { AdminSidebar } from "@/components/dashboard/admin/admin-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-
-export default function DashboardSiswa() {
+export default function StudentPage() {
   return (
-    <SidebarProvider>
-      <AdminSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-          </div>
-          <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Selamat Datang! 👋</h1>
+        <p className="text-muted-foreground">Siap untuk mempelajari hal baru hari ini?</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Progress Card */}
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+           <div className="font-semibold">Kelas Sedang Dipelajari</div>
+           <div className="mt-4 text-2xl font-bold">Fullstack Web Dev</div>
+           <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-blue-600 w-[65%]" />
+           </div>
+           <p className="text-xs text-muted-foreground mt-2">Progress: 65%</p>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+
+        {/* Stats Card */}
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+           <div className="font-semibold">Sertifikat Dimiliki</div>
+           <div className="mt-4 text-3xl font-bold text-green-600">2</div>
+        </div>
+      </div>
+      
+      {/* Course List Placeholder */}
+      <div className="min-h-75 rounded-xl border bg-card shadow p-6">
+         <h2 className="text-xl font-bold mb-4">Rekomendasi Untukmu</h2>
+         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+                <div key={i} className="aspect-video rounded-lg bg-muted/50 flex items-center justify-center border">
+                    Course Thumbnail {i}
+                </div>
+            ))}
+         </div>
+      </div>
+    </div>
   )
 }

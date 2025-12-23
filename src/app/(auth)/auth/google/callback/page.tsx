@@ -1,55 +1,71 @@
 'use client';
 
 import { useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation'; 
-import { useAuthStore } from '@/stores/auth-store'; //
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth-store';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-// import { api } from '@/lib/axios'; // Uncomment jika sudah ada fetch profile
+import { api } from '@/lib/axios';
 
 function GoogleCallbackContent() {
   const searchParams = useSearchParams();
-  const setAccessToken = useAuthStore((state) => state.setAccessToken); //
+  const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken'); //
+    const accessToken = searchParams.get('accessToken');
     const error = searchParams.get('error');
 
     if (error) {
-       console.error("Google Auth Error:", error);
-       toast.error("Gagal login dengan Google");
+       toast.error("Gagal login: " + error);
        router.replace('/login');
        return;
     }
 
     if (accessToken) {
-      // 1. Simpan Access Token ke State (Memory)
-      useAuthStore.getState().setAccessToken(accessToken);
-      
-      toast.success("Login berhasil!");
-      
-      // 2. PERBAIKAN UTAMA: Gunakan Hard Navigation
-      // Jangan pakai router.push('/dashboard'). 
-      // Router Next.js terlalu cepat, Middleware belum melihat cookie baru.
-      window.location.href = '/dashboard'; 
-      
+      const processLogin = async () => {
+        try {
+          useAuthStore.getState().setAccessToken(accessToken);
+          
+          // Fetch user profile untuk update state
+          let userData = null;
+          try {
+             const { data } = await api.get('/users/me');
+             userData = data.data;
+          } catch {
+             // Fallback minimal
+             userData = { _id: "google", fullName: "User", role: "user" }; 
+          }
+
+          setAuth(userData, accessToken);
+          toast.success("Login berhasil!");
+          
+          // ⚠️ WAJIB PAKAI INI AGAR COOKIE TERBACA
+          window.location.href = '/dashboard/siswa'; 
+          
+        } catch (err) {
+          router.replace('/login');
+        }
+      };
+      processLogin();
     } else {
        router.replace('/login');
     }
-  }, [searchParams, setAccessToken, router]);
+  }, [searchParams, setAuth, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-      <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-      <p className="text-gray-500 font-medium">Sedang memverifikasi data Google...</p>
+    <div className="flex h-screen w-full items-center justify-center bg-muted/30">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Menyiapkan dashboard Anda...</p>
+      </div>
     </div>
   );
 }
 
 export default function Page() {
     return (
-        <Suspense fallback={<div className="p-10 text-center">Loading...</div>}>
+        <Suspense fallback={null}>
             <GoogleCallbackContent />
         </Suspense>
     )
