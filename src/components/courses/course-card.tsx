@@ -1,0 +1,143 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Course, CourseLevel } from "@/types/course";
+import { Button } from "@/components/ui/button";
+import { BorderBeam } from "@/components/ui/border-beam";
+import { IconArrowRight, IconChartBar } from "@tabler/icons-react";
+import { Badge } from "@/components/ui/badge";
+
+interface CourseCardProps {
+  course: Course;
+}
+
+// Helper untuk mengubah kode backend jadi label cantik
+const getLevelLabel = (level: CourseLevel) => {
+  switch (level) {
+    case "bk_tk":
+      return "BK & TK";
+    case "sd":
+      return "SD";
+    case "smp":
+      return "SMP";
+    case "sma":
+      return "SMA";
+    case "umum":
+      return "Umum";
+    default:
+      return level;
+  }
+};
+
+// Helper warna badge berdasarkan level (Opsional, biar visual beda-beda)
+const getLevelColor = (level: CourseLevel) => {
+  switch (level) {
+    case "bk_tk":
+      return "bg-pink-100 text-pink-700 border-pink-200";
+    case "sd":
+      return "bg-red-100 text-red-700 border-red-200";
+    case "smp":
+      return "bg-blue-100 text-blue-700 border-blue-200";
+    case "sma":
+      return "bg-gray-100 text-gray-700 border-gray-200";
+    case "umum":
+      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    default:
+      return "bg-secondary text-secondary-foreground";
+  }
+};
+
+export function CourseCard({ course }: CourseCardProps) {
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  return (
+    <div className="group relative flex flex-col rounded-[2.5rem] border border-border bg-card p-4 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 h-full">
+      {/* Image Area */}
+      <div className="relative aspect-video w-full overflow-hidden rounded-[1.8rem] bg-muted shadow-inner">
+        {course.thumbnailUrl ? (
+          <Image
+            src={course.thumbnailUrl}
+            alt={course.title}
+            fill
+            className="object-cover transition-transform duration-1000 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-secondary text-muted-foreground text-xs">
+            No Image
+          </div>
+        )}
+
+        {/* Badge Level di Pojok Gambar */}
+        <div className="absolute top-4 right-4">
+          <Badge
+            className={`uppercase text-[10px] font-bold shadow-sm ${getLevelColor(
+              course.level
+            )}`}
+          >
+            {getLevelLabel(course.level)}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex flex-col flex-1 px-3 py-6">
+        <div className="mb-4 flex items-center justify-between text-[10px] font-bold text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <IconChartBar size={14} className="text-primary" />
+            <span>Jenjang {getLevelLabel(course.level)}</span>
+          </div>
+        </div>
+
+        <h3
+          className="mb-6 text-xl md:text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2"
+          title={course.title}
+        >
+          {course.title}
+        </h3>
+
+        {/* Footer Card */}
+        <div className="mt-auto flex items-end justify-between pt-6 border-t border-border/50">
+          <div>
+            <span className="block text-[10px] font-bold uppercase text-muted-foreground opacity-60">
+              Investasi
+            </span>
+            <span className="text-lg font-black text-foreground">
+              {course.isFree ? "GRATIS" : formatRupiah(course.price)}
+            </span>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl border-primary/20 hover:bg-primary hover:text-primary-foreground group transition-all px-6 h-10"
+            asChild
+          >
+            <Link href={`/courses/${course.id}`}>
+              Detail
+              <IconArrowRight
+                size={16}
+                className="ml-2 transition-transform group-hover:translate-x-1"
+              />
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <BorderBeam
+        duration={10}
+        size={350}
+        className="opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        colorFrom="var(--primary)"
+        colorTo="var(--accent)"
+      />
+    </div>
+  );
+}

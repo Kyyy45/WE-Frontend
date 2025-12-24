@@ -14,7 +14,9 @@ function GoogleCallbackContent() {
   const router = useRouter();
 
   useEffect(() => {
+    // Ambil token dari URL
     const accessToken = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
     const error = searchParams.get("error");
 
     if (error) {
@@ -26,30 +28,28 @@ function GoogleCallbackContent() {
     if (accessToken) {
       const processLogin = async () => {
         try {
-          // 1. Simpan Token Manual (Client-side Cookie & Store)
-          setCookie("refreshToken", accessToken);
+          // 1. Simpan Access Token ke Memory (Zustand)
           useAuthStore.getState().setAccessToken(accessToken);
 
-          // 2. Beri delay agar cookie tersimpan sebelum redirect
-          setTimeout(async () => {
-            try {
-              // Fetch profile user
-              const { data } = await api.get("/users/me");
-              const userData = data.data;
+          // 2. Jika ada Refresh Token di URL, simpan ke Cookie.
+          if (refreshToken) {
+            setCookie("refreshToken", refreshToken);
+          }
 
-              setAuth(userData, accessToken);
-              toast.success(`Selamat datang, ${userData.fullName}`);
+          // 3. Fetch data user untuk memastikan token valid
+          try {
+            const { data } = await api.get("/users/me");
+            const userData = data.data;
 
-              // 3. Hard navigation ke dashboard agar middleware membaca cookie
-              window.location.href = "/dashboard";
-            } catch (fetchErr) {
-              console.error("Fetch profile error", fetchErr);
-              // Tetap redirect jika token valid meski profil gagal load
-              window.location.href = "/dashboard";
-            }
-          }, 100);
+            setAuth(userData, accessToken);
+            toast.success(`Selamat datang, ${userData.fullName}`);
+
+            window.location.href = "/dashboard";
+          } catch (fetchErr) {
+            console.error("Fetch profile error", fetchErr);
+            router.replace("/login");
+          }
         } catch {
-          // Error handling umum
           router.replace("/login");
         }
       };

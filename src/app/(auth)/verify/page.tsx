@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { VerifyForm } from "@/components/auth/verify-form";
 import { AuthImage } from "@/components/auth/auth-image";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 export default function VerifyPage() {
   return (
@@ -14,7 +16,15 @@ export default function VerifyPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <VerifyForm />
+            <Suspense
+              fallback={
+                <div className="flex justify-center">
+                  <Loader2 className="animate-spin" />
+                </div>
+              }
+            >
+              <VerifyForm />
+            </Suspense>
           </div>
         </div>
       </div>
