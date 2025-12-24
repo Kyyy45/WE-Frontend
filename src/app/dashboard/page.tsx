@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { Loader2 } from "lucide-react";
-import { Header } from "@/components/landing-page/header"; // Opsional: Biar tidak blank putih banget
+import { Header } from "@/components/landing-page/header";
 
 export default function DashboardPage() {
   const router = useRouter();
