@@ -107,7 +107,9 @@ export default function HeroSection() {
               </h1>
 
               <p className="mt-8 max-w-xl mx-auto lg:mx-0 lg:text-xl md:text-lg text-base leading-relaxed text-muted-foreground">
-                Bangun kepercayaan diri berbicara bahasa Inggris bersama tutor profesional dan metode pembelajaran interaktif di Worldpedia Education.
+                Bangun kepercayaan diri berbicara bahasa Inggris bersama tutor
+                profesional dan metode pembelajaran interaktif di Worldpedia
+                Education.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-5">
@@ -116,7 +118,7 @@ export default function HeroSection() {
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                   asChild
                 >
-                  <Link href="/daftar">Daftar Sekarang</Link>
+                  <Link href="/courses">Daftar Sekarang</Link>
                 </Button>
                 <Button
                   size="lg"

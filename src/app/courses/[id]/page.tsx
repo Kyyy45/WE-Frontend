@@ -23,6 +23,7 @@ import {
   IconArrowLeft,
   IconAlertCircle,
   IconMoodSad,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -36,6 +37,10 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // State baru untuk status enrollment
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+
   const { accessToken, user } = useAuthStore();
 
   useEffect(() => {
@@ -46,7 +51,6 @@ export default function CourseDetailPage() {
         setCourse(data.data);
       } catch (err: unknown) {
         console.error("Error fetching course:", err);
-
         if (err instanceof AxiosError) {
           const status = err.response?.status;
           if (status === 404 || status === 400 || status === 500) {
@@ -54,7 +58,6 @@ export default function CourseDetailPage() {
             return;
           }
         }
-
         toast.error("Gagal memuat detail kursus");
       } finally {
         setLoading(false);
@@ -65,6 +68,29 @@ export default function CourseDetailPage() {
       fetchCourse();
     }
   }, [courseId]);
+
+  // Effect untuk cek status enrollment jika user login
+  useEffect(() => {
+    const checkEnrollmentStatus = async () => {
+      if (!accessToken || !user || !courseId) return;
+
+      try {
+        setCheckingEnrollment(true);
+        // Endpoint: GET /enrollments/me/:courseId
+        await api.get(`/enrollments/me/${courseId}`);
+
+        // Jika tidak error (200 OK), berarti sudah enroll
+        setIsEnrolled(true);
+      } catch (error) {
+        // Jika error (biasanya 404), berarti belum enroll
+        setIsEnrolled(false);
+      } finally {
+        setCheckingEnrollment(false);
+      }
+    };
+
+    checkEnrollmentStatus();
+  }, [courseId, accessToken, user]);
 
   if (loading) {
     return <DetailSkeleton />;
@@ -80,8 +106,7 @@ export default function CourseDetailPage() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Data Tidak Ditemukan</h1>
           <p className="text-muted-foreground mb-6 max-w-md">
-            Sepertinya kursus yang Anda cari tidak ada atau terjadi kesalahan
-            saat mengambil data.
+            Kursus tidak ditemukan.
           </p>
           <Button onClick={() => router.push("/courses")}>
             Kembali ke Katalog
@@ -91,15 +116,21 @@ export default function CourseDetailPage() {
     );
   }
 
-  const handleEnrollClick = () => {
-    // 1. Cek Login: Jika user belum login, lempar ke halaman login
+  const handleActionClick = () => {
+    // 1. Jika Sudah Enroll -> Ke Dashboard Siswa
+    if (isEnrolled) {
+      router.push("/dashboard/siswa");
+      return;
+    }
+
+    // 2. Jika Belum Login -> Ke Login
     if (!accessToken || !user) {
-      toast.error("Silakan login terlebih dahulu untuk mendaftar.");
+      toast.error("Silakan login terlebih dahulu.");
       router.push(`/login?returnUrl=/courses/${courseId}`);
       return;
     }
 
-    // 2. Jika sudah login, lanjut cek Form
+    // 3. Jika Belum Enroll -> Ke Form Pendaftaran
     if (
       course.registrationForm &&
       typeof course.registrationForm === "object"
@@ -107,9 +138,7 @@ export default function CourseDetailPage() {
       const formSlug = course.registrationForm.slug;
       router.push(`/form/${formSlug}?courseId=${course.id}`);
     } else {
-      toast.error(
-        "Formulir pendaftaran belum diatur oleh admin untuk kursus ini."
-      );
+      toast.error("Formulir pendaftaran belum diatur admin.");
     }
   };
 
@@ -140,16 +169,17 @@ export default function CourseDetailPage() {
                 {course.isFree && (
                   <Badge className="bg-green-600">Gratis</Badge>
                 )}
+                {isEnrolled && (
+                  <Badge className="bg-blue-600 animate-in fade-in zoom-in">
+                    Sudah Terdaftar
+                  </Badge>
+                )}
               </div>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-tight">
                 {course.title}
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl">
-                Program pembelajaran komprehensif untuk tingkat{" "}
-                {course.level === "bk_tk"
-                  ? "BK & TK"
-                  : course.level.toUpperCase()}{" "}
-                dengan materi terstruktur.
+                Program pembelajaran komprehensif dengan materi terstruktur.
               </p>
             </div>
           </Container>
@@ -157,6 +187,7 @@ export default function CourseDetailPage() {
 
         <Container>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-start">
+            {/* KONTEN KIRI (Sama seperti sebelumnya) */}
             <div className="space-y-10 min-w-0">
               <div className="lg:hidden rounded-2xl overflow-hidden border border-border shadow-sm aspect-video relative">
                 {course.thumbnailUrl ? (
@@ -176,39 +207,14 @@ export default function CourseDetailPage() {
               <section>
                 <h3 className="text-2xl font-bold mb-4">Tentang Kursus</h3>
                 <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {course.description ||
-                    "Belum ada deskripsi mendetail untuk kursus ini."}
+                  {course.description || "Belum ada deskripsi."}
                 </div>
               </section>
 
               <Separator />
-
-              <section>
-                <h3 className="text-xl font-bold mb-6">
-                  Apa yang akan Anda pelajari?
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {[
-                    "Materi terstruktur sesuai kurikulum",
-                    "Akses selamanya ke materi pembelajaran",
-                    "Sertifikat kelulusan (Digital)",
-                    "Dukungan instruktur berpengalaman",
-                    "Akses di perangkat Mobile & Desktop",
-                    "Grup komunitas siswa",
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className="mt-1 bg-primary/10 p-1 rounded-full">
-                        <IconCheck className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {item}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </section>
             </div>
 
+            {/* SIDEBAR KANAN */}
             <div className="lg:sticky lg:top-32 space-y-6">
               <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-primary/5 overflow-hidden relative">
                 <div className="hidden lg:block rounded-xl overflow-hidden mb-6 aspect-video relative bg-muted border border-border/50">
@@ -242,21 +248,39 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
 
+                {/* TOMBOL AKSI UTAMA */}
                 <Button
                   size="lg"
-                  className="w-full text-base font-bold h-12 shadow-lg shadow-primary/20"
-                  onClick={handleEnrollClick}
+                  className={`w-full text-base font-bold h-12 shadow-lg transition-all ${
+                    isEnrolled
+                      ? "bg-green-600 hover:bg-green-700 shadow-green-500/20"
+                      : "shadow-primary/20"
+                  }`}
+                  onClick={handleActionClick}
+                  disabled={checkingEnrollment}
                 >
-                  Daftar Sekarang
+                  {checkingEnrollment ? (
+                    "Memeriksa Status..."
+                  ) : isEnrolled ? (
+                    <>
+                      <IconPlayerPlay className="mr-2 h-5 w-5" />
+                      Lanjut Belajar
+                    </>
+                  ) : (
+                    "Daftar Sekarang"
+                  )}
                 </Button>
 
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  Jaminan 30 hari uang kembali jika tidak puas.
+                  {isEnrolled
+                    ? "Anda sudah memiliki akses penuh ke kelas ini."
+                    : "Jaminan 30 hari uang kembali jika tidak puas."}
                 </p>
 
                 <Separator className="my-6" />
 
                 <div className="space-y-4">
+                  {/* Info Level, Durasi, dll tetap sama */}
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 text-muted-foreground">
                       <IconChartBar className="w-4 h-4" /> Level
@@ -265,28 +289,15 @@ export default function CourseDetailPage() {
                       {course.level.replace("_", " ")}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-muted-foreground">
-                      <IconClock className="w-4 h-4" /> Durasi
-                    </span>
-                    <span className="font-medium">Fleksibel</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-muted-foreground">
-                      <IconCertificate className="w-4 h-4" /> Sertifikat
-                    </span>
-                    <span className="font-medium">Ya</span>
-                  </div>
                 </div>
               </div>
 
-              {!course.registrationForm && (
+              {!course.registrationForm && !isEnrolled && (
                 <Alert variant="destructive">
                   <IconAlertCircle className="h-4 w-4" />
                   <AlertTitle>Perhatian Admin</AlertTitle>
                   <AlertDescription>
-                    Kursus ini belum terhubung dengan Form Pendaftaran. Siswa
-                    tidak bisa mendaftar.
+                    Form pendaftaran belum diset.
                   </AlertDescription>
                 </Alert>
               )}
@@ -317,7 +328,6 @@ function DetailSkeleton() {
             <Skeleton className="h-6 w-48 mb-4" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
           </div>
           <div>
             <Skeleton className="h-96 w-full rounded-2xl" />
