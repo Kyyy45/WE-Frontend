@@ -1,202 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "@/lib/axios";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useAuthStore } from "@/stores/auth-store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AvatarUpload } from "@/components/dashboard/siswa/profile/avatar-upload";
+import { ProfileForm } from "@/components/dashboard/siswa/profile/profile-form";
+import { SecurityForm } from "@/components/dashboard/siswa/profile/security-form";
+import { Lock, ShieldAlert } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
-import { AxiosError } from "axios";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { changePasswordSchema, ChangePasswordValues } from "@/lib/validations";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-export function SecurityForm() {
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+export default function AdminProfilePage() {
+  const { user } = useAuthStore();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
-  });
+  if (!user) return null;
 
-  const onSubmit = async (data: ChangePasswordValues) => {
-    // Validasi manual tambahan di frontend sebelum kirim
-    if (data.newPassword !== data.confirmPassword) {
-      toast.error("Konfirmasi password tidak cocok!");
-      return;
-    }
-
-    try {
-      // Payload Backend: Wajib ada confirmNewPassword
-      const payload = {
-        oldPassword: data.oldPassword,
-        newPassword: data.newPassword,
-        confirmNewPassword: data.confirmPassword, // Field ini krusial
-      };
-
-      console.log("Sending payload:", payload); // Cek console browser F12 jika masih gagal
-
-      await api.patch("/users/me/password", payload);
-
-      toast.success("Password berhasil diubah! Silakan login ulang.");
-      reset();
-      setShowOldPassword(false);
-      setShowNewPassword(false);
-      setShowConfirmPassword(false);
-    } catch (error: unknown) {
-      console.error("Change Password Error:", error);
-
-      if (error instanceof AxiosError) {
-        const errorData = error.response?.data;
-
-        if (errorData?.errors && Array.isArray(errorData.errors)) {
-          // Tampilkan pesan error validasi pertama yang spesifik
-          const firstError = errorData.errors[0];
-          toast.error(`${firstError.path || "Input"}: ${firstError.msg}`);
-        } else {
-          // Fallback message
-          toast.error(errorData?.message || "Gagal mengubah password.");
-        }
-      } else {
-        toast.error("Terjadi kesalahan sistem.");
-      }
-    }
-  };
+  // LOGIC GOOGLE AUTH / PROVIDER DETECTION
+  // Sama persis dengan siswa, admin juga bisa login via Google
+  const isSocialLogin = user.authProvider === "google";
 
   return (
-    <Card className="bg-card border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-foreground">Ganti Kata Sandi</CardTitle>
-        <CardDescription className="text-muted-foreground">
-          Gunakan minimal 8 karakter kombinasi huruf besar, kecil, angka, dan
-          simbol.
-        </CardDescription>
-      </CardHeader>
+    <div className="flex flex-col gap-6 max-w-4xl animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Pengaturan Profil</h1>
+        <p className="text-muted-foreground">
+          Kelola informasi akun administrator dan preferensi keamanan Anda.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          {/* PASSWORD LAMA */}
-          <div className="grid gap-2">
-            <Label htmlFor="oldPassword">Password Lama</Label>
-            <div className="relative">
-              <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="oldPassword"
-                type={showOldPassword ? "text" : "password"}
-                {...register("oldPassword")}
-                className="pl-9 pr-10"
-                placeholder="Password saat ini"
-              />
-              <button
-                type="button"
-                onClick={() => setShowOldPassword(!showOldPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-              >
-                {showOldPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.oldPassword && (
-              <p className="text-xs text-destructive">
-                {errors.oldPassword.message}
-              </p>
-            )}
-          </div>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:w-100">
+          <TabsTrigger value="general">Informasi Umum</TabsTrigger>
 
-          {/* PASSWORD BARU */}
-          <div className="grid gap-2">
-            <Label htmlFor="newPassword">Password Baru</Label>
-            <div className="relative">
-              <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="newPassword"
-                type={showNewPassword ? "text" : "password"}
-                {...register("newPassword")}
-                className="pl-9 pr-10"
-                placeholder="Password baru"
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-              >
-                {showNewPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.newPassword && (
-              <p className="text-xs text-destructive">
-                {errors.newPassword.message}
-              </p>
-            )}
-          </div>
+          {/* Logic Tab Security: Disable jika Social Login */}
+          {isSocialLogin ? (
+            <TooltipProvider>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  {/* Span wrapper agar tooltip jalan di elemen disabled */}
+                  <span tabIndex={0} className="w-full">
+                    <TabsTrigger
+                      value="security"
+                      disabled
+                      className="w-full opacity-50 cursor-not-allowed data-[state=active]:bg-transparent"
+                    >
+                      Keamanan <Lock className="ml-2 w-3 h-3" />
+                    </TabsTrigger>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  className="bg-destructive text-destructive-foreground"
+                >
+                  <p className="flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4" />
+                    Akun Google tidak memiliki password lokal.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <TabsTrigger value="security">Keamanan</TabsTrigger>
+          )}
+        </TabsList>
 
-          {/* KONFIRMASI */}
-          <div className="grid gap-2">
-            <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                {...register("confirmPassword")}
-                className="pl-9 pr-10"
-                placeholder="Ulangi password baru"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-xs text-destructive">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-        </CardContent>
+        <TabsContent
+          value="general"
+          className="space-y-6 mt-6 focus-visible:outline-none"
+        >
+          <AvatarUpload />
+          <ProfileForm />
+        </TabsContent>
 
-        <CardFooter className="bg-muted/20 px-6 py-4 border-t">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Memproses...
-              </>
-            ) : (
-              "Simpan Password Baru"
-            )}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+        {!isSocialLogin && (
+          <TabsContent
+            value="security"
+            className="mt-6 focus-visible:outline-none"
+          >
+            <SecurityForm />
+          </TabsContent>
+        )}
+      </Tabs>
+    </div>
   );
 }

@@ -36,19 +36,17 @@ export function SecurityForm() {
 
   const onSubmit = async (data: ChangePasswordValues) => {
     try {
-      // 1. Kirim Payload
-      // Note: Validasi password match sudah dihandle oleh Zod Resolver
-      // sebelum fungsi ini dipanggil.
+      // 1. Kirim Payload ke Backend
       await api.patch("/users/me/password", {
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
-        confirmPassword: data.confirmPassword,
+        confirmPassword: data.confirmPassword, // Field wajib backend
       });
 
       toast.success("Password berhasil diubah! Silakan login ulang.");
       reset();
 
-      // Reset visibility toggle
+      // Reset visibility
       setShowOldPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
@@ -57,8 +55,7 @@ export function SecurityForm() {
 
       if (error instanceof AxiosError) {
         const errorData = error.response?.data;
-
-        // 2. Handle Error Validasi dari Backend (Jika ada)
+        // 2. Handle Error Validasi
         if (errorData?.errors && Array.isArray(errorData.errors)) {
           toast.error(errorData.errors[0].msg);
         } else {
