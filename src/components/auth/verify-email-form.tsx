@@ -26,7 +26,7 @@ import { verifySchema, type VerifyValues } from "@/lib/validations";
 
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1 text-center">
+    <p className="text-xs font-medium text-destructive mt-2 text-center animate-in slide-in-from-top-1">
       {msg}
     </p>
   ) : null;
@@ -111,22 +111,26 @@ export function VerifyForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div
+      className={cn("flex flex-col gap-6 w-full max-w-sm mx-auto", className)}
+      {...props}
+    >
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Enter verification code</h1>
-            <p className="text-muted-foreground text-sm text-balance">
-              We sent a 6-digit code to your email{" "}
-              <span className="font-medium text-foreground">
+          <div className="flex flex-col items-center gap-2 text-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Masukkan kode verifikasi
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base text-balance">
+              Kami telah mengirimkan kode 6 digit ke email Anda.{" "}
+              <span className="font-semibold text-foreground block mt-1">
                 {emailFromUrl}
               </span>
-              .
             </p>
           </div>
-          <Field>
+          <Field className="flex flex-col items-center">
             <FieldLabel htmlFor="otp" className="sr-only">
-              Verification code
+              Kode verifikasi
             </FieldLabel>
 
             <Controller
@@ -140,31 +144,52 @@ export function VerifyForm({
                   onChange={field.onChange}
                   disabled={isSubmitting}
                 >
-                  <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border">
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
+                  <InputOTPGroup>
+                    <InputOTPSlot
+                      index={0}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
+                    <InputOTPSlot
+                      index={1}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
+                    <InputOTPSlot
+                      index={2}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
                   </InputOTPGroup>
+
                   <InputOTPSeparator />
-                  <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border">
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                  </InputOTPGroup>
-                  <InputOTPSeparator />
-                  <InputOTPGroup className="gap-2 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border">
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
+
+                  <InputOTPGroup>
+                    <InputOTPSlot
+                      index={3}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
+                    <InputOTPSlot
+                      index={4}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
+                    <InputOTPSlot
+                      index={5}
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                    />
                   </InputOTPGroup>
                 </InputOTP>
               )}
             />
             <ErrorMsg msg={errors.code?.message} />
 
-            <FieldDescription className="text-center">
-              Enter the 6-digit code sent to your email.
+            <FieldDescription className="text-center text-xs md:text-sm mt-4 text-muted-foreground">
+              Masukkan kode 6 digit yang dikirimkan ke email Anda.
             </FieldDescription>
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-4"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -172,19 +197,19 @@ export function VerifyForm({
             )}
           </Button>
 
-          <div className="text-center text-sm text-muted-foreground mt-2">
-            Didn&apos;t receive the code?{" "}
+          <div className="text-center text-sm md:text-base text-muted-foreground mt-4">
+            Tidak menerima kode?{" "}
             {countdown > 0 ? (
-              <span className="font-medium text-orange-600">
-                Resend in {countdown}s
+              <span className="font-medium text-orange-600 block sm:inline transition-colors">
+                Kirim ulang dalam {countdown} detik
               </span>
             ) : (
               <a
                 href="#"
                 onClick={handleResend}
-                className="underline hover:text-foreground font-medium"
+                className="underline hover:text-primary font-medium transition-colors underline-offset-4"
               >
-                Resend Code
+                Kirim Ulang Kode
               </a>
             )}
           </div>

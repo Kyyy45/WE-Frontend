@@ -2,62 +2,48 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Course, CourseLevel } from "@/types/course";
+import { Course } from "@/types/course";
 import { Button } from "@/components/ui/button";
 import { BorderBeam } from "@/components/ui/border-beam";
-import { IconArrowRight, IconChartBar } from "@tabler/icons-react";
+import { IconArrowRight, IconChartBar, IconUsers } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { formatRupiah } from "@/lib/utils";
 
 interface CourseCardProps {
   course: Course;
 }
 
-// Helper untuk mengubah kode backend jadi label cantik
-const getLevelLabel = (level: CourseLevel) => {
-  switch (level) {
-    case "bk_tk":
-      return "BK & TK";
-    case "sd":
-      return "SD";
-    case "smp":
-      return "SMP";
-    case "sma":
-      return "SMA";
-    case "umum":
-      return "Umum";
-    default:
-      return level;
-  }
+// Helper untuk label level
+const getLevelLabel = (level: string) => {
+  const map: Record<string, string> = {
+    bk_tk: "BK & TK",
+    sd: "SD",
+    smp: "SMP",
+    sma: "SMA",
+    umum: "Umum",
+  };
+  return map[level] || level;
 };
 
-// Helper warna badge berdasarkan level (Opsional, biar visual beda-beda)
-const getLevelColor = (level: CourseLevel) => {
+// Helper warna pastel
+const getLevelColor = (level: string) => {
   switch (level) {
     case "bk_tk":
-      return "bg-pink-100 text-pink-700 border-pink-200";
+      return "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200";
     case "sd":
-      return "bg-red-100 text-red-700 border-red-200";
+      return "bg-red-100 text-red-700 border-red-200 hover:bg-red-200";
     case "smp":
-      return "bg-blue-100 text-blue-700 border-blue-200";
+      return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200";
     case "sma":
-      return "bg-gray-100 text-gray-700 border-gray-200";
+      return "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200";
     case "umum":
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200";
     default:
       return "bg-secondary text-secondary-foreground";
   }
 };
 
 export function CourseCard({ course }: CourseCardProps) {
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
     <div className="group relative flex flex-col rounded-[2.5rem] border border-border bg-card p-4 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 h-full">
       {/* Image Area */}
@@ -70,8 +56,8 @@ export function CourseCard({ course }: CourseCardProps) {
             className="object-cover transition-transform duration-1000 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-secondary text-muted-foreground text-xs">
-            No Image
+          <div className="flex h-full items-center justify-center bg-secondary text-muted-foreground text-xs font-medium">
+            No Preview
           </div>
         )}
 
@@ -89,11 +75,27 @@ export function CourseCard({ course }: CourseCardProps) {
 
       {/* Content Area */}
       <div className="flex flex-col flex-1 px-3 py-6">
-        <div className="mb-4 flex items-center justify-between text-[10px] font-bold text-muted-foreground">
+        {/* Meta Info: Level & Target Audience */}
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-[10px] font-bold text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <IconChartBar size={14} className="text-primary" />
-            <span>Jenjang {getLevelLabel(course.level)}</span>
+            <span>{getLevelLabel(course.level)}</span>
           </div>
+          {/* Target Audience (Umur) - BARU */}
+          {course.targetAudience && (
+            <>
+              <div className="h-1 w-1 rounded-full bg-border" />
+              <div className="flex items-center gap-1.5">
+                <IconUsers size={14} className="text-primary" />
+                <span
+                  className="line-clamp-1 max-w-25"
+                  title={course.targetAudience}
+                >
+                  {course.targetAudience}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <h3
@@ -109,9 +111,19 @@ export function CourseCard({ course }: CourseCardProps) {
             <span className="block text-[10px] font-bold uppercase text-muted-foreground opacity-60">
               Investasi
             </span>
-            <span className="text-lg font-black text-foreground">
-              {course.isFree ? "GRATIS" : formatRupiah(course.price)}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-lg font-black text-foreground">
+                {course.isFree ? "GRATIS" : formatRupiah(course.price)}
+              </span>
+              {/* Tampilkan SPP kecil jika ada */}
+              {!course.isFree &&
+                course.monthlyPrice &&
+                course.monthlyPrice > 0 && (
+                  <span className="text-[10px] text-muted-foreground font-medium">
+                    + Biaya SPP {formatRupiah(course.monthlyPrice)}/bln
+                  </span>
+                )}
+            </div>
           </div>
 
           <Button
@@ -131,6 +143,7 @@ export function CourseCard({ course }: CourseCardProps) {
         </div>
       </div>
 
+      {/* Animasi Border Beam */}
       <BorderBeam
         duration={10}
         size={350}

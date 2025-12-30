@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { AxiosError } from "axios";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -19,7 +19,7 @@ import {
 
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1">{msg}</p>
+    <p className="text-xs font-medium text-destructive mt-1.5">{msg}</p>
   ) : null;
 
 export function ForgotPasswordForm({
@@ -27,7 +27,6 @@ export function ForgotPasswordForm({
   ...props
 }: React.ComponentProps<"div">) {
   const [isSuccess, setIsSuccess] = React.useState(false);
-
   const [submittedEmail, setSubmittedEmail] = React.useState("");
 
   const {
@@ -41,10 +40,8 @@ export function ForgotPasswordForm({
   const onSubmit = async (data: ForgotPasswordValues) => {
     try {
       await api.post("/auth/password/request-reset", data);
-
       setSubmittedEmail(data.email);
       setIsSuccess(true);
-
       toast.success("Link reset password telah dikirim ke email Anda.");
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -60,39 +57,32 @@ export function ForgotPasswordForm({
   if (isSuccess) {
     return (
       <div
-        className={cn("flex flex-col gap-6 text-center", className)}
+        className={cn(
+          "flex flex-col gap-6 text-center max-w-sm mx-auto",
+          className
+        )}
         {...props}
       >
-        <div className="flex flex-col items-center gap-2">
-          <div className="rounded-full bg-green-100 p-3 text-green-600 dark:bg-green-900 dark:text-green-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-              <path d="M14.05 2a9 9 0 0 0-9 9" />
-            </svg>
+        <div className="flex flex-col items-center gap-4">
+          <div className="rounded-2xl bg-green-500/15 p-4 text-green-600 dark:text-green-400 ring-1 ring-inset ring-green-500/20 shadow-sm">
+            <Mail className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold">Check your email</h1>
-          <p className="text-muted-foreground text-sm">
-            We have sent a password reset link to{" "}
-            <span className="font-medium text-foreground">
-              {submittedEmail}
-            </span>
-            .
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Periksa email Anda
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base">
+              Kami telah mengirimkan tautan untuk mereset kata sandi ke{" "}
+              <span className="font-semibold text-foreground block mt-1">
+                {submittedEmail}
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="text-center text-sm">
+        <div className="text-center text-sm md:text-base">
           <Link
             href="/login"
-            className="text-muted-foreground underline hover:text-primary"
+            className="text-muted-foreground underline hover:text-primary transition-colors underline-offset-4"
           >
             Kembali ke Login
           </Link>
@@ -102,29 +92,41 @@ export function ForgotPasswordForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 md:gap-8", className)} {...props}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Forgot Password</h1>
-            <p className="text-muted-foreground text-sm text-balance">
-              Enter your email address and we&apos;ll send you a link to reset
-              your password.
+          <div className="flex flex-col items-center gap-2 text-center mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Lupa Kata Sandi
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base">
+              Masukkan alamat email Anda, dan kami akan mengirimkan tautan untuk
+              mereset kata sandi Anda.
             </p>
           </div>
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel
+              htmlFor="email"
+              className="text-sm md:text-base font-medium"
+            >
+              Email
+            </FieldLabel>
             <Input
               id="email"
               type="email"
               placeholder="m@example.com"
               {...register("email")}
               disabled={isSubmitting}
+              className="bg-background h-10 md:h-11"
             />
             <ErrorMsg msg={errors.email?.message} />
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-2"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -132,10 +134,10 @@ export function ForgotPasswordForm({
             )}
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm md:text-base mt-4">
             <Link
               href="/login"
-              className="text-muted-foreground underline hover:text-primary"
+              className="text-muted-foreground underline hover:text-primary transition-colors underline-offset-4"
             >
               Kembali ke Login
             </Link>

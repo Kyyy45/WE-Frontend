@@ -34,19 +34,19 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // 1. Panggil Backend untuk hapus HTTP-Only Cookie
+          // Panggil backend untuk clear httpOnly cookies
           await api.post("/auth/logout");
         } catch (error) {
           console.error("Logout server error:", error);
         }
 
-        // 2. Hapus state di Zustand
+        // Hapus state client
         set({ user: null, accessToken: null, isAuthenticated: false });
 
-        // 3. Hapus paksa dari LocalStorage browser (sesuai nama 'key' Anda di bawah)
+        // Hapus localStorage persist
         localStorage.removeItem("we-auth-storage");
 
-        // 4. Hard Refresh ke halaman login agar Middleware membaca ulang kondisi cookie kosong
+        // Redirect paksa
         window.location.href = "/login";
       },
     }),

@@ -5,21 +5,18 @@ import { SectionWrapper } from "@/components/layout/section-wrapper";
 const teachers = [
   {
     name: "Dessy Oktavia, S.Pd.",
-    slug: "dessy-oktavia",
     role: "Professional Tutor",
-    avatar: "https://alt.tailus.io/images/team/member-one.webp",
+    avatar: "/profil-guru/DessyOktavia.jpg",
   },
   {
     name: "Anna Enriyani",
-    slug: "anna-enriyani",
     role: "Professional Tutor",
-    avatar: "https://alt.tailus.io/images/team/member-two.webp",
+    avatar: "/profil-guru/AnnaEnriyani.jpg",
   },
   {
     name: "Shabrina Felia, S.M.",
-    slug: "shabrina-felia",
     role: "Professional Tutor",
-    avatar: "https://alt.tailus.io/images/team/member-three.webp",
+    avatar: "/profil-guru/ShabrinaFelia.jpg",
   },
 ];
 

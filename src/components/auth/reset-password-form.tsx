@@ -25,7 +25,7 @@ import Link from "next/link";
 
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1">{msg}</p>
+    <p className="text-xs font-medium text-destructive mt-1.5">{msg}</p>
   ) : null;
 
 export function ResetPasswordForm({
@@ -83,23 +83,30 @@ export function ResetPasswordForm({
   if (!token) return null;
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 md:gap-8", className)} {...props}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Set new password</h1>
-            <p className="text-muted-foreground text-sm text-balance">
-              Please enter your new password below.
+          <div className="flex flex-col items-center gap-2 text-center mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Atur kata sandi baru
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base text-balance">
+              Silakan masukkan kata sandi baru Anda di bawah ini.
             </p>
           </div>
 
           <Field>
-            <FieldLabel htmlFor="password">New Password</FieldLabel>
+            <FieldLabel
+              htmlFor="password"
+              className="text-sm md:text-base font-medium"
+            >
+              Kata Sandi Baru
+            </FieldLabel>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                className="pr-10"
+                className="pr-10 bg-background h-10 md:h-11"
                 {...register("password")}
                 disabled={isSubmitting}
               />
@@ -109,25 +116,30 @@ export function ResetPasswordForm({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPassword ? (
-                  <EyeOff className="size-4" />
+                  <EyeOff className="size-4 md:size-5" />
                 ) : (
-                  <Eye className="size-4" />
+                  <Eye className="size-4 md:size-5" />
                 )}
               </button>
             </div>
             <ErrorMsg msg={errors.password?.message} />
-            <FieldDescription>
-              Must be at least 8 characters long.
+            <FieldDescription className="text-xs md:text-sm">
+              Gunakan minimal 8 karakter, 1 angka, 1 simbol.
             </FieldDescription>
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+            <FieldLabel
+              htmlFor="confirmPassword"
+              className="text-sm md:text-base font-medium"
+            >
+              Konfirmasi Kata Sandi
+            </FieldLabel>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                className="pr-10"
+                className="pr-10 bg-background h-10 md:h-11"
                 {...register("confirmPassword")}
                 disabled={isSubmitting}
               />
@@ -137,26 +149,33 @@ export function ResetPasswordForm({
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="size-4" />
+                  <EyeOff className="size-4 md:size-5" />
                 ) : (
-                  <Eye className="size-4" />
+                  <Eye className="size-4 md:size-5" />
                 )}
               </button>
             </div>
             <ErrorMsg msg={errors.confirmPassword?.message} />
+            <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
+              Silakan masukkan ulang kata sandi Anda untuk konfirmasi.
+            </FieldDescription>
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-2"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               "Reset Password"
             )}
           </Button>
-          <div className="text-center text-sm">
+          <div className="text-center text-sm md:text-base mt-4">
             <Link
               href="/login"
-              className="text-muted-foreground underline hover:text-primary"
+              className="text-muted-foreground underline hover:text-primary transition-colors underline-offset-4"
             >
               Kembali ke Login
             </Link>

@@ -33,53 +33,71 @@ import { ArrowRightIcon } from "lucide-react";
 export default function AboutPage() {
   const coreValues = [
     {
+      label: "Saling Menghargai",
+      icon: <IconHeart size={24} />,
+      desc: "Usaha untuk menjadi lebih baik.",
+    },
+    {
       label: "Professional",
       icon: <IconTrophy size={24} />,
-      desc: "Tenaga pengajar ahli dengan standar kompetensi global.",
+      desc: "Keutamaan kami untuk keberhasilan yang baik.",
     },
     {
       label: "Pembimbing Unggul",
       icon: <IconStar size={24} />,
-      desc: "Metode bimbingan personal untuk hasil belajar maksimal.",
+      desc: "Membimbing siswa/siswi kami dan melayani konsumen lebih baik.",
     },
     {
-      label: "Tim Dinamis",
+      label: "Tim Worldpedia",
       icon: <IconBolt size={24} />,
-      desc: "Ekosistem kerja yang inovatif dan terus berkembang.",
+      desc: "Dinamis dan dapat diandalkan sehingga memenuhi kebutuhan konsumen.",
     },
     {
       label: "Integritas",
       icon: <IconShieldCheck size={24} />,
-      desc: "Mengutamakan kejujuran dalam setiap proses edukasi.",
-    },
-    {
-      label: "Saling Menghargai",
-      icon: <IconHeart size={24} />,
-      desc: "Lingkungan belajar inklusif yang menghormati perbedaan.",
+      desc: "Norma yang kami junjung tinggi di Worldpedia, sehingga kami dapat mempertanggung jawabkan perbuatan dan perkataan sebagai bentuk.",
     },
   ];
 
   const teachers = [
     {
-      name: "Sarah Johnson",
-      role: "Chief Executive Officer",
-      description:
-        "Sarah merupakan praktisi pendidikan dengan pengalaman lebih dari 10 tahun di industri edukasi bahasa. Beliau berfokus pada pengembangan kurikulum adaptif yang menggabungkan teknologi digital dengan metode pengajaran konvensional.",
-      image: "/teachers/teacher-1.png",
+      name: "Dessy Oktavia, S.Pd.",
+      role: "Professional Tutor",
+      LatarBelakang:
+        "Mrs. Dessy dikenal ceria, kreatif, penyayang dan selalu membuat suasana kelas menyenangkan.",
+      FunFact:
+        "Funt Fact: Beliau suka bernyanyi dan bermain game edukasi bareng murid-murid dikelas.",
+      Awardee: "Mrs. Dessy juga merupakan awardee dari program-program ini:",
+      Proggram1: "1. CCI Schoolarship Program Awardee 2021-2022.",
+      Proggram2:
+        "2. Special Education Paraeducator - Norhtampton County Area Community College 2022.",
+      Proggram3: "3. Letterland Certified Teacher.",
+      image: "/profil-guru/DessyOktavia.jpg",
     },
     {
-      name: "David Chen",
-      role: "Chief Academic Officer",
-      description:
-        "David memiliki latar belakang akademis yang kuat dalam linguistik terapan. Beliau memastikan setiap program memenuhi standar internasional UK/US dan memberikan hasil yang terukur bagi setiap siswa.",
-      image: "/teachers/teacher-2.png",
+      name: "Anna Enriyani",
+      role: "Professional Tutor",
+      LatarBelakang:
+        "Mrs. Anna Selalu penuh semangat dan sabar dalam membimbing anak-anak di kelas English.",
+      FunFact:
+        "Fun Fact: Beliau suka games seru tentang bahasa Inggris di dalam kelas, bikin anak-anak betah belajar.",
+      Awardee: "Mrs. Dessy juga sudah mendapatkan sertifikat di bidang ini:",
+      Proggram1:
+        "1. Curriculum Based Professional Development: Linking Your Expertise and Professionalism.",
+      Proggram2: "2. Letterland Certified Teacher.",
+      image: "/profil-guru/AnnaEnriyani.jpg",
     },
     {
-      name: "Amanda Putri",
-      role: "Senior English Mentor",
-      description:
-        "Amanda adalah spesialis persiapan tes internasional (IELTS/TOEFL) yang telah membantu ratusan siswa mencapai skor impian mereka. Beliau dikenal dengan metode pengajarannya yang santai namun sangat terarah.",
-      image: "/teachers/teacher-3.png",
+      name: "Shabrina Felia, S.M",
+      role: "Professional Tutor",
+      LatarBelakang:
+        "Miss. Felia dikenal kreatif dan penuh ide-ide seru saat mengenalkan karakter Letterland ke anak-anak.",
+      FunFact:
+        "Fun Fact: Beliau suka mengubah pelajaran jadi permainan, jadi belajar huruf di kelas Letterland makin gampang diingat.",
+      Awardee: "Miss. Felia juga merupakan awardee dari program-program ini:",
+      Proggram1: "1. English Access Microschoolarship Program 2016-2017",
+      Proggram2: "2. Letterland Certified Teacher.",
+      image: "/profil-guru/ShabrinaFelia.jpg",
     },
   ];
 
@@ -96,7 +114,7 @@ export default function AboutPage() {
           <Container className="pt-32 pb-24 md:pt-44 lg:pt-56">
             <div className="max-w-4xl mx-auto text-center">
               <div className="mb-8 flex justify-center">
-                <div className="group inline-flex items-center rounded-full border border-border bg-muted px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/80">
+                <div className="group inline-flex items-center rounded-full border border-border bg-muted px-4 py-1.5 text-base font-medium text-foreground transition-colors hover:bg-muted/80">
                   <AnimatedShinyText className="inline-flex items-center gap-1">
                     <span>📖 Mengenal Worldpedia</span>
                     <ArrowRightIcon className="size-3 transition-transform group-hover:translate-x-0.5" />
@@ -147,10 +165,9 @@ export default function AboutPage() {
                   Kami berdedikasi untuk membantu Anda menguasai bahasa Inggris
                   dan menjadi digital talent terbaik dengan standar global.
                 </p>
-                {/* rounded-[2rem] diubah ke rounded-4xl (Saran Tailwind) */}
-                <div className="relative aspect-video rounded-4xl overflow-hidden border border-border shadow-2xl group">
+                <div className="relative aspect-square rounded-4xl overflow-hidden border border-border shadow-2xl group">
                   <Image
-                    src="/facility/about.png"
+                    src="/facility/about-we.jpg"
                     alt="Center"
                     fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -170,30 +187,39 @@ export default function AboutPage() {
                   </div>
                   {/* Karakter kutipan " di-escape (Error No. 1 & 2) */}
                   <p className="text-muted-foreground text-base md:text-lg leading-relaxed italic">
-                    &quot;Kami melayani siswa/i dengan kemampuan terbaik untuk
-                    tidak hanya membuat mereka tumbuh, tetapi juga mengembangkan
-                    kemampuan mereka agar siap menyambut masa depan
-                    global.&quot;
+                    <Highlighter
+                      action="underline"
+                      color="var(--primary)"
+                      isView={true}
+                    >
+                      Visi Worldpedia Education
+                    </Highlighter>{" "}
+                    Menjadi contoh dan pilihan yang menginspirasi sebagai pusat
+                    pembelajaran bahasa.
+                    <br />
+                    <Highlighter
+                      action="underline"
+                      color="var(--primary)"
+                      isView={true}
+                    >
+                      Misi Worldpedia Education
+                    </Highlighter>{" "}
+                    Membantu meningkatkan kemampuan berbahasa dan kemampuan
+                    pengetahuan umum untuk berkontribusi di masyarakat dan
+                    peningkatan.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 pt-10 border-t border-border/50">
+                <div className="pt-10 border-t border-border/50">
                   <div className="space-y-4">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                    <p className="text-base font-black text-primary uppercase tracking-[0.2em]">
                       Tujuan Utama
                     </p>
-                    <p className="text-sm font-medium text-foreground/80 leading-relaxed">
-                      Menciptakan ekosistem belajar yang suportif dan berbasis
-                      pada standar internasional UK/US.
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                      Fokus Kami
-                    </p>
-                    <p className="text-sm font-medium text-foreground/80 leading-relaxed">
-                      Mengembangkan rasa percaya diri dalam berkomunikasi dan
-                      berpikir kritis secara global.
+                    <p className="text-base font-medium text-foreground/80 leading-relaxed">
+                      Meningkatkan kemampuan berbahasa siswa/siswi, WE juga
+                      dapat membantu meningkatkan performa akademik siswa/siswi
+                      dengan program bimbingan belajar yang mana dapat membantu
+                      siswa/siswi untuk bersaing di jenjang yang lebih tinggi.
                     </p>
                   </div>
                 </div>
@@ -209,7 +235,7 @@ export default function AboutPage() {
 
           <Container>
             <div className="text-center mb-16 space-y-4">
-              <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+              <p className="text-primary font-black uppercase tracking-[0.3em] text-base">
                 Filosofi Kerja
               </p>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
@@ -254,7 +280,7 @@ export default function AboutPage() {
 
           <Container>
             <div className="text-center lg:text-left mb-24 space-y-4">
-              <p className="text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+              <p className="text-primary font-black uppercase tracking-[0.3em] text-base">
                 Tim Kami
               </p>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
@@ -280,7 +306,7 @@ export default function AboutPage() {
                 >
                   {/* max-w-[400px] diubah ke max-w-100 (Saran Tailwind) */}
                   <div className="w-full lg:w-1/2 max-w-100 shrink-0">
-                    <div className="relative aspect-square rounded-4xl overflow-hidden border border-border shadow-2xl group bg-muted">
+                    <div className="relative aspect-4/5 rounded-4xl overflow-hidden border border-border shadow-2xl group bg-muted">
                       <Image
                         src={teacher.image}
                         alt={teacher.name}
@@ -292,7 +318,7 @@ export default function AboutPage() {
 
                   <div className="flex-1 space-y-6 text-center lg:text-left">
                     <div>
-                      <p className="text-primary font-bold text-[10px] uppercase tracking-widest mb-1">
+                      <p className="text-primary font-bold text-base uppercase tracking-widest mb-1">
                         {teacher.role}
                       </p>
                       <h3 className="text-2xl md:text-4xl font-bold text-foreground">
@@ -300,7 +326,18 @@ export default function AboutPage() {
                       </h3>
                     </div>
                     <p className="text-muted-foreground text-lg leading-relaxed">
-                      {teacher.description}
+                      {teacher.LatarBelakang}
+                      <br />
+                      {teacher.FunFact}
+                      <br />
+                      {teacher.Awardee}
+                      <br />
+                      {teacher.Proggram1}
+                      <br />
+                      {teacher.Proggram2}
+                      <br />
+                      {teacher.Proggram3}
+                      <br />
                     </p>
                     <div className="flex justify-center lg:justify-start gap-5 pt-4 text-muted-foreground/60">
                       <Link
@@ -350,9 +387,11 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="relative z-10 flex flex-col sm:flex-row gap-4">
-                <Button className="h-14 px-10 rounded-2xl font-black bg-primary text-primary-foreground uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                  Daftar Sekarang
-                </Button>
+                <Link href="/courses">
+                  <Button className="h-14 px-10 rounded-2xl font-black bg-primary text-primary-foreground uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                    Daftar Sekarang
+                  </Button>
+                </Link>
               </div>
               <div className="absolute -right-20 -bottom-20 size-96 bg-primary/10 blur-[120px] rounded-full" />
             </div>

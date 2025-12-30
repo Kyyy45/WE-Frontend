@@ -1,8 +1,16 @@
-export interface ApiResponse<T = unknown> {
+// Wrapper response standar (res.json({ success: true, ... }))
+export interface ApiResponse<T> {
   success: boolean;
-  message: string;
-  data?: T;
+  message?: string;
+  data: T;
+  errors?: Record<string, unknown>[] | string | null;
+}
 
-  errors?: string[];
-  stack?: string;
+// Wrapper untuk pagination (listCourses, listUsers, dll)
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
 }

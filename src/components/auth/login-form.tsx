@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
+  FieldDescription,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -23,10 +23,11 @@ import { User } from "@/types/user";
 import { loginSchema, type LoginValues } from "@/lib/validations";
 import Link from "next/link";
 
-// PERBAIKAN: Pindah ke luar
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1">{msg}</p>
+    <p className="text-xs font-medium text-destructive mt-1.5 animate-in slide-in-from-top-1">
+      {msg}
+    </p>
   ) : null;
 
 export function LoginForm({
@@ -47,33 +48,32 @@ export function LoginForm({
 
   const onSubmit = async (data: LoginValues) => {
     try {
-      const { data: loginRes } = await api.post<{
-        data: { accessToken: string };
-      }>("/auth/login", data);
-      const accessToken = loginRes.data.accessToken;
+      // 1. POST Login: Backend set cookies (accessToken & refreshToken)
+      await api.post("/auth/login", data);
 
+      // 2. Fetch Access Token string lewat endpoint refresh
+      const { data: refreshRes } = await api.post<{
+        data: { accessToken: string };
+      }>("/auth/refresh");
+      const accessToken = refreshRes.data.accessToken;
+
+      // 3. Simpan token sementara ke store
       useAuthStore.getState().setAccessToken(accessToken);
 
-      let userData = null;
-      try {
-        const { data: profileRes } = await api.get<{ data: User }>("/users/me");
-        userData = profileRes.data;
-      } catch {
-        userData = {
-          _id: "temp",
-          fullName: "User",
-          email: data.usernameOrEmail,
-        } as User;
-      }
+      // 4. Fetch User Profile
+      const { data: profileRes } = await api.get<{ data: User }>("/users/me");
+      const userData = profileRes.data;
 
+      // 5. Update State Auth Lengkap
       setAuth(userData, accessToken);
-      toast.success("Login berhasil!");
+
+      toast.success(`Selamat datang kembali, ${userData.fullName}`);
       router.push("/dashboard");
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data?.message || "Kredensial salah");
       } else {
-        toast.error("Gagal login");
+        toast.error("Gagal login, periksa koneksi internet");
       }
     }
   };
@@ -81,43 +81,57 @@ export function LoginForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-5 md:gap-6", className)}
       {...props}
     >
       <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Enter your email below to login to your account
+        <div className="flex flex-col items-center gap-2 text-center mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            Masuk ke Akun
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base text-balance">
+            Masukkan kredensial Anda untuk masuk dan mengakses dashboard Anda.
           </p>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="usernameOrEmail">Email or Username</FieldLabel>
+          <FieldLabel
+            htmlFor="usernameOrEmail"
+            className="text-sm md:text-base font-medium"
+          >
+            Email atau Username
+          </FieldLabel>
           <Input
             id="usernameOrEmail"
-            placeholder="m@example.com"
+            placeholder="nama@email.com"
             {...register("usernameOrEmail")}
             disabled={isSubmitting}
+            className="bg-background h-10 md:h-11"
           />
           <ErrorMsg msg={errors.usernameOrEmail?.message} />
         </Field>
 
         <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <a
-              href="/forgot-password"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
+          <div className="flex items-center justify-between">
+            <FieldLabel
+              htmlFor="password"
+              className="text-sm md:text-base font-medium"
             >
-              Forgot your password?
-            </a>
+              Kata Sandi
+            </FieldLabel>
+            <Link
+              href="/forgot-password"
+              className="text-xs md:text-sm text-primary font-medium hover:underline underline-offset-4"
+            >
+              Lupa kata sandi?
+            </Link>
           </div>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="pr-10"
+              placeholder="••••••••"
+              className="pr-10 bg-background h-10 md:h-11"
               {...register("password")}
               disabled={isSubmitting}
             />
@@ -127,9 +141,9 @@ export function LoginForm({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4" />
+                <EyeOff className="size-4 md:size-5" />
               ) : (
-                <Eye className="h-4 w-4" />
+                <Eye className="size-4 md:size-5" />
               )}
             </button>
           </div>
@@ -137,31 +151,38 @@ export function LoginForm({
         </Field>
 
         <Field>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-2 shadow-sm"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              "Login"
+              "Masuk"
             )}
           </Button>
         </Field>
 
-        <div className="text-center text-sm">
+        <div className="text-center text-sm md:text-base">
           <Link
             href="/resend-verification"
-            className="text-muted-foreground underline hover:text-primary"
+            className="text-muted-foreground hover:text-primary transition-colors"
           >
-            Belum verifikasi akun? Kirim ulang kode
+            Belum verifikasi akun?{" "}
+            <span className="underline underline-offset-4">
+              Kirim ulang kode
+            </span>
           </Link>
         </div>
 
-        <FieldSeparator>Or continue with</FieldSeparator>
+        <FieldSeparator className="my-2">Atau masuk dengan</FieldSeparator>
 
         <Field>
           <Button
             variant="outline"
             type="button"
-            className="w-full"
+            className="w-full h-10 md:h-11 bg-background hover:bg-muted/50"
             onClick={() =>
               (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
             }
@@ -176,13 +197,16 @@ export function LoginForm({
                 fill="currentColor"
               />
             </svg>
-            Login with Google
+            Login dengan Google
           </Button>
-          <FieldDescription className="text-center">
-            Don&apos;t have an account?{" "}
-            <a href="/register" className="underline underline-offset-4">
-              Sign up
-            </a>
+          <FieldDescription className="text-center mt-4 text-sm md:text-base">
+            Belum punya akun?{" "}
+            <Link
+              href="/register"
+              className="text-primary font-medium hover:underline underline-offset-4"
+            >
+              Daftar sekarang
+            </Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

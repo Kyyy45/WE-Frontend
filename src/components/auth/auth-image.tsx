@@ -14,7 +14,7 @@ export function AuthImage({ alt = "Auth Image", className }: AuthImageProps) {
       <img
         src={AUTH_IMAGE_PATH}
         alt={alt}
-        className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+        className="absolute inset-0 h-full w-full object-cover"
       />
     </div>
   );

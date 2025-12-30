@@ -20,7 +20,7 @@ import {
 
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1">{msg}</p>
+    <p className="text-xs font-medium text-destructive mt-1.5">{msg}</p>
   ) : null;
 
 export function ResendVerificationForm({
@@ -40,8 +40,7 @@ export function ResendVerificationForm({
   const onSubmit = async (data: ResendVerificationValues) => {
     try {
       await api.post("/auth/activation/send", data);
-
-      toast.success("Kode baru berhasil dikirim!");
+      toast.success("Kode baru berhasil dikirim! Silakan cek email.");
       router.push(`/verify?email=${encodeURIComponent(data.email)}`);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -53,32 +52,45 @@ export function ResendVerificationForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 md:gap-8", className)} {...props}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
-              <Mail className="h-5 w-5" />
+          <div className="flex flex-col items-center gap-2 text-center mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-2 shadow-sm ring-1 ring-inset ring-primary/20">
+              <Mail className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-bold">Verifikasi Akun</h1>
-            <p className="text-muted-foreground text-sm text-balance">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+              Verifikasi Akun
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base text-balance max-w-[90%]">
               Masukkan email yang Anda daftarkan untuk menerima kode aktivasi
               baru.
             </p>
           </div>
+
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel
+              htmlFor="email"
+              className="text-sm md:text-base font-medium"
+            >
+              Email
+            </FieldLabel>
             <Input
               id="email"
               type="email"
               placeholder="m@example.com"
               {...register("email")}
               disabled={isSubmitting}
+              className="bg-background h-10 md:h-11"
             />
             <ErrorMsg msg={errors.email?.message} />
           </Field>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-2"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -86,10 +98,10 @@ export function ResendVerificationForm({
             )}
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm md:text-base mt-4">
             <Link
               href="/login"
-              className="text-muted-foreground underline hover:text-primary"
+              className="text-muted-foreground underline hover:text-primary transition-colors underline-offset-4"
             >
               Kembali ke Login
             </Link>

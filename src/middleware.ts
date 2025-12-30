@@ -1,38 +1,42 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  // LOGGING UTAMA: Lihat cookie apa saja yang masuk
-  const allCookies = request.cookies.getAll();
-  console.log("Middleware Cookies:", allCookies.map(c => c.name)); 
-
-  const refreshToken = request.cookies.get('refreshToken'); 
+  const refreshToken = request.cookies.get("refreshToken");
   const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith('/auth/google/callback')) {
+  // Izinkan callback Google lewat
+  if (pathname.startsWith("/auth/google/callback")) {
     return NextResponse.next();
   }
 
-  const isProtectedPage = pathname.startsWith('/dashboard') || 
-                          pathname.startsWith('/profile');
+  const isProtectedPage =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/profile");
 
-  const isAuthPage = pathname.startsWith('/login') || 
-                     pathname.startsWith('/register');
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/verify") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
 
-  // KASUS 1: Akses Dashboard tanpa token
+  // KASUS 1: Akses Halaman Terlindungi tanpa Token -> Login
   if (isProtectedPage && !refreshToken) {
-    console.log(`[BLOCKED] Access to ${pathname} denied. Missing refreshToken.`);
-    return NextResponse.redirect(new URL('/login', request.url));
+    const url = new URL("/login", request.url);
+    // Simpan returnUrl agar bisa redirect balik (opsional)
+    // url.searchParams.set("returnUrl", pathname);
+    return NextResponse.redirect(url);
   }
 
-  // KASUS 2: Sudah login tapi buka Login
+  // KASUS 2: Sudah Login tapi buka Login/Register -> Dashboard
   if (isAuthPage && refreshToken) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // Matcher mengecualikan file statis, gambar, api routes nextjs
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

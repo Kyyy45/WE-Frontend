@@ -64,15 +64,3 @@ export const LogoIcon = ({ className }: { className?: string }) => {
     </div>
   );
 };
-
-export const LogoStroke = ({ className }: { className?: string }) => {
-  return (
-    <div className={cn("opacity-10 grayscale", className)}>
-      <img
-        src="/logo.png"
-        alt="Worldpedia Stroke"
-        className="h-8 w-auto object-contain"
-      />
-    </div>
-  );
-};

@@ -1,19 +1,19 @@
-export type FormStatus = 'active' | 'inactive';
-export type FormVisibility = 'public' | 'authenticated';
+export type FormStatus = "active" | "inactive";
+export type FormVisibility = "public" | "authenticated";
 
 export type FormFieldType =
-  | 'text'
-  | 'textarea'
-  | 'number'
-  | 'select'
-  | 'radio'
-  | 'checkbox'
-  | 'date'
-  | 'email'
-  | 'phone'
-  | 'header';
+  | "text"
+  | "textarea"
+  | "number"
+  | "select"
+  | "radio"
+  | "checkbox"
+  | "date"
+  | "email"
+  | "phone"
+  | "header";
 
-export interface FormFieldOption {
+export interface FormOption {
   label: string;
   value: string;
 }
@@ -25,12 +25,12 @@ export interface FormField {
   required: boolean;
   placeholder?: string;
   helpText?: string;
-  options?: FormFieldOption[];
+  options?: FormOption[];
   order?: number;
 }
 
 export interface Form {
-  _id: string;
+  id: string;
   name: string;
   slug: string;
   description?: string;
@@ -39,4 +39,21 @@ export interface Form {
   fields: FormField[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type FormSubmissionValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | null
+  | undefined;
+
+// Untuk Submission (Jawaban Form)
+export interface FormSubmission {
+  id: string;
+  formId: string;
+  userId?: string | null;
+  data: Record<string, FormSubmissionValue>;
+  createdAt: string;
 }

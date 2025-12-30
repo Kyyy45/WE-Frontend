@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { VerifyForm } from "@/components/auth/verify-form";
+import { VerifyForm } from "@/components/auth/verify-email-form";
 import { AuthImage } from "@/components/auth/auth-image";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";

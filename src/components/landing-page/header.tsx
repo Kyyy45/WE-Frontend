@@ -179,7 +179,7 @@ export const Header = () => {
                         isScrolled ? "lg:inline-flex" : "lg:hidden"
                       )}
                     >
-                      <Link href="/get-started">Get Started</Link>
+                      <Link href="/courses">Get Started</Link>
                     </Button>
                   </>
                 )}

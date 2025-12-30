@@ -19,10 +19,13 @@ import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterValues } from "@/lib/validations";
+import Link from "next/link";
 
 const ErrorMsg = ({ msg }: { msg?: string }) =>
   msg ? (
-    <p className="text-[0.8rem] font-medium text-red-500 mt-1">{msg}</p>
+    <p className="text-xs font-medium text-destructive mt-1.5 animate-in slide-in-from-top-1">
+      {msg}
+    </p>
   ) : null;
 
 export function RegisterForm({
@@ -45,6 +48,8 @@ export function RegisterForm({
     try {
       await api.post("/auth/register", data);
       toast.success("Registrasi berhasil! Cek email untuk kode verifikasi.");
+
+      // Redirect ke verify dengan params email
       router.push(`/verify?email=${encodeURIComponent(data.email)}`);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -58,118 +63,167 @@ export function RegisterForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className={cn("flex flex-col gap-6", className)}
+      className={cn("flex flex-col gap-5 md:gap-6", className)}
       {...props}
     >
       <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-muted-foreground text-sm text-balance">
-            Fill in the form below to create your account
+        <div className="flex flex-col items-center gap-2 text-center mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            Buat Akun Worldpedia Education
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
+            Bergabunglah dengan Worldpedia Education dan mulai perjalanan
+            belajar Anda hari ini.
           </p>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="fullName">Full Name</FieldLabel>
+          <FieldLabel
+            htmlFor="fullName"
+            className="text-sm md:text-base font-medium"
+          >
+            Nama Lengkap
+          </FieldLabel>
           <Input
             id="fullName"
-            placeholder="John Doe"
+            placeholder="Contoh: Jhon Doe"
             {...register("fullName")}
             disabled={isSubmitting}
+            className="bg-background h-10 md:h-11"
           />
           <ErrorMsg msg={errors.fullName?.message} />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="username">Username</FieldLabel>
+          <FieldLabel
+            htmlFor="username"
+            className="text-sm md:text-base font-medium"
+          >
+            Username
+          </FieldLabel>
           <Input
             id="username"
-            placeholder="johndoe"
+            placeholder="jhondoe123"
             {...register("username")}
             disabled={isSubmitting}
+            className="bg-background h-10 md:h-11"
           />
           <ErrorMsg msg={errors.username?.message} />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel
+            htmlFor="email"
+            className="text-sm md:text-base font-medium"
+          >
+            Email
+          </FieldLabel>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder="nama@email.com"
             {...register("email")}
             disabled={isSubmitting}
+            className="bg-background h-10 md:h-11"
           />
+          <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
+            Kami akan menggunakan email ini untuk menghubungi Anda. Kami tidak
+            akan membagikan email Anda kepada pihak lain.
+          </FieldDescription>
           <ErrorMsg msg={errors.email?.message} />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <FieldLabel
+            htmlFor="password"
+            className="text-sm md:text-base font-medium"
+          >
+            Kata Sandi
+          </FieldLabel>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="pr-10"
+              placeholder="••••••••"
+              className="pr-10 bg-background h-10 md:h-11"
               {...register("password")}
               disabled={isSubmitting}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="size-4" />
+                <EyeOff className="size-4 md:size-5" />
               ) : (
-                <Eye className="size-4" />
+                <Eye className="size-4 md:size-5" />
               )}
             </button>
           </div>
+
+          <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
+            Gunakan minimal 8 karakter, 1 angka, 1 simbol. Mohon buat kata sandi baru untuk akun ini, jangan gunakan kata sandi email pribadi Anda.
+          </FieldDescription>
+
           <ErrorMsg msg={errors.password?.message} />
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+          <FieldLabel
+            htmlFor="confirmPassword"
+            className="text-sm md:text-base font-medium"
+          >
+            Konfirmasi Kata Sandi
+          </FieldLabel>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
-              className="pr-10"
+              placeholder="••••••••"
+              className="pr-10 bg-background h-10 md:h-11"
               {...register("confirmPassword")}
               disabled={isSubmitting}
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               {showConfirmPassword ? (
-                <EyeOff className="size-4" />
+                <EyeOff className="size-4 md:size-5" />
               ) : (
-                <Eye className="size-4" />
+                <Eye className="size-4 md:size-5" />
               )}
             </button>
           </div>
+          <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
+            Silakan masukkan ulang kata sandi Anda untuk konfirmasi.
+          </FieldDescription>
           <ErrorMsg msg={errors.confirmPassword?.message} />
         </Field>
 
         <Field>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-10 md:h-11 font-semibold text-base mt-2 shadow-sm"
+          >
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              "Create Account"
+              "Buat Akun"
             )}
           </Button>
         </Field>
 
-        <FieldSeparator>Or continue with</FieldSeparator>
+        <FieldSeparator className="my-2">Atau lanjutkan dengan</FieldSeparator>
 
         <Field>
           <Button
             variant="outline"
             type="button"
-            className="w-full"
+            className="w-full h-10 md:h-11 bg-background hover:bg-muted/50"
             onClick={() =>
               (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
             }
@@ -184,13 +238,16 @@ export function RegisterForm({
                 fill="currentColor"
               />
             </svg>
-            Register with Google
+            Daftar dengan Google
           </Button>
-          <FieldDescription className="px-6 text-center">
-            Already have an account?{" "}
-            <a href="/login" className="underline underline-offset-4">
-              Sign in
-            </a>
+          <FieldDescription className="text-center mt-4 text-sm md:text-base">
+            Sudah punya akun?{" "}
+            <Link
+              href="/login"
+              className="text-primary font-medium hover:underline underline-offset-4"
+            >
+              Masuk
+            </Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

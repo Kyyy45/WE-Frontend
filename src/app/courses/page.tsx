@@ -11,6 +11,7 @@ import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
 import { CourseCard } from "@/components/courses/course-card";
 import { api } from "@/lib/axios";
 import { Course } from "@/types/course";
+import { ApiResponse, PaginatedResponse } from "@/types/api";
 import { IconLayoutGrid, IconSchool, IconLoader } from "@tabler/icons-react";
 import { ArrowRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,18 @@ export default function CoursesPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const { data } = await api.get("/courses");
+        // Backend Filtering Logic
+        const params: Record<string, string> = {};
+        if (activeFilter !== "SEMUA") {
+          params.level = activeFilter;
+        }
+
+        const { data } = await api.get<ApiResponse<PaginatedResponse<Course>>>(
+          "/courses",
+          {
+            params,
+          }
+        );
 
         if (data.data && Array.isArray(data.data.items)) {
           setCourses(data.data.items);
@@ -48,19 +60,14 @@ export default function CoursesPage() {
     };
 
     fetchCourses();
-  }, []);
-
-  // Filter Logic Client-Side
-  const filteredCourses =
-    activeFilter === "SEMUA"
-      ? courses
-      : courses.filter((course) => course.level === activeFilter);
+  }, [activeFilter]);
 
   return (
     <div className="flex min-h-screen flex-col bg-background overflow-x-clip">
       <Header />
 
       <main className="flex-1">
+        {/* HERO SECTION  */}
         <SectionWrapper className="relative border-b border-border/50">
           <div className="absolute inset-y-0 left-0 w-px bg-border/40 hidden lg:block ml-[5%]"></div>
           <div className="absolute inset-y-0 right-0 w-px bg-border/40 hidden lg:block mr-[5%]"></div>
@@ -85,7 +92,7 @@ export default function CoursesPage() {
                   </span>
                 </h1>
 
-                <p className="mt-8 text-base md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                <p className="mt-8 text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto lg:mx-0">
                   Tingkatkan kompetensi melalui{" "}
                   <Highlighter
                     action="underline"
@@ -98,7 +105,7 @@ export default function CoursesPage() {
                 </p>
               </div>
 
-              {/* Kolom Kanan: Bento Image Grid (Static Images are fine) */}
+              {/* Kolom Kanan: Bento Image Grid */}
               <div className="relative z-30 grid grid-cols-2 grid-rows-2 gap-4 h-87.5 md:h-112.5 lg:h-125 w-full min-w-0">
                 <div className="col-span-1 row-span-2 relative rounded-4xl overflow-hidden border border-border/50 group shadow-2xl">
                   <Image
@@ -130,7 +137,7 @@ export default function CoursesPage() {
           </section>
         </SectionWrapper>
 
-        {/* --- SECTION 2: KATALOG --- */}
+        {/* SECTION 2: KATALOG */}
         <SectionWrapper className="relative">
           <div className="absolute inset-y-0 left-0 w-px bg-border/40 hidden lg:block ml-[5%]"></div>
           <div className="absolute inset-y-0 right-0 w-px bg-border/40 hidden lg:block mr-[5%]"></div>
@@ -174,7 +181,7 @@ export default function CoursesPage() {
                     <IconLayoutGrid size={20} className="text-primary" />
                     <h2 className="text-lg font-bold">Katalog Kursus</h2>
                     <span className="bg-muted px-2 py-0.5 rounded text-[10px] text-muted-foreground">
-                      {loading ? "..." : filteredCourses.length} Program
+                      {loading ? "..." : courses.length} Program
                     </span>
                   </div>
                 </div>
@@ -191,13 +198,13 @@ export default function CoursesPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-                    {filteredCourses.map((course) => (
+                    {courses.map((course) => (
                       <CourseCard key={course.id} course={course} />
                     ))}
                   </div>
                 )}
 
-                {!loading && filteredCourses.length === 0 && (
+                {!loading && courses.length === 0 && (
                   <div className="py-24 text-center border-y border-dashed border-border/50 bg-muted/5">
                     <IconSchool
                       size={48}

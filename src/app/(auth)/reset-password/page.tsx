@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { AuthImage } from "@/components/auth/auth-image";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { Loader2 } from "lucide-react";
 
 export default function ResetPasswordPage() {
   return (
@@ -14,7 +16,15 @@ export default function ResetPasswordPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <ResetPasswordForm />
+            <Suspense 
+              fallback={
+                <div className="flex justify-center items-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              }
+            >
+              <ResetPasswordForm />
+            </Suspense>
           </div>
         </div>
       </div>

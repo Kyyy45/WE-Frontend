@@ -1,61 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { Loader2 } from "lucide-react";
-import { Header } from "@/components/landing-page/header";
 
-export default function DashboardPage() {
+function DashboardRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated } = useAuthStore();
-  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // 1. Cek Auth
     const checkAuthAndRedirect = () => {
-      // Debugging: Cek di Console Browser (F12) untuk lihat status
-      console.log("Dashboard Check -> Auth:", isAuthenticated, "Role:", user?.role);
-
       if (!isAuthenticated || !user) {
-        // Jika tidak login, tendang ke login page
         router.replace("/login");
         return;
       }
 
-      // 2. Siapkan Query Params (misal ?payment=success)
       const queryString = searchParams.toString();
       const query = queryString ? `?${queryString}` : "";
 
-      // 3. Arahkan sesuai Role
       if (user.role === "admin") {
         router.replace(`/dashboard/admin${query}`);
       } else {
-        // Default ke siswa
         router.replace(`/dashboard/siswa${query}`);
       }
     };
 
-    // Beri sedikit delay agar hydration store selesai (Next.js Hydration fix)
     const timeout = setTimeout(() => {
       checkAuthAndRedirect();
-      setIsChecking(false);
     }, 100);
 
     return () => clearTimeout(timeout);
   }, [isAuthenticated, user, router, searchParams]);
 
-  // Tampilan Loading Spinner
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header /> {/* Header ditampilkan agar user tidak bingung */}
-      <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground text-sm animate-pulse">
-          Sedang memuat data akun...
-        </p>
+    <div className="flex-1 flex flex-col items-center justify-center space-y-6 min-h-[60vh]">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+        <Loader2 className="relative h-12 w-12 md:h-16 md:w-16 animate-spin text-primary" />
       </div>
+      <p className="text-muted-foreground text-sm md:text-base font-medium animate-pulse">
+        Mengarahkan ke dashboard {user?.role === "admin" ? "Admin" : "Siswa"}...
+      </p>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background items-center justify-center">
+      <Suspense
+        fallback={
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        }
+      >
+        <DashboardRedirect />
+      </Suspense>
     </div>
   );
 }

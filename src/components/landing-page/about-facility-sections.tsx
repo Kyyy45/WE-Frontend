@@ -93,7 +93,7 @@ export default function AboutFacilityBento() {
                 {i === 0 && (
                   <div className="mb-6">
                     <ImageHeader
-                      src="/facility/about.png"
+                      src="/facility/about-we.jpg"
                       className="aspect-3/2 md:aspect-square"
                     />
                   </div>
