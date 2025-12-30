@@ -1,14 +1,17 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { User } from "@/types/user";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { api } from "@/lib/axios";
+import { User } from "@/types/user";
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+
+  // Actions
   setAuth: (user: User, accessToken: string) => void;
   setAccessToken: (token: string) => void;
+  updateUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
 }
 
@@ -24,31 +27,35 @@ export const useAuthStore = create<AuthState>()(
 
       setAccessToken: (accessToken) => set({ accessToken }),
 
+      updateUser: (updates) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updates } : null,
+        })),
+
       logout: async () => {
         try {
-          // 1. Panggil API Logout Backend (untuk revoke token di DB)
+          // Panggil backend untuk clear httpOnly cookies
           await api.post("/auth/logout");
         } catch (error) {
-          console.error(
-            "Logout backend failed, clearing local state anyway",
-            error
-          );
-        } finally {
-          // 2. [PENTING] Hapus Cookie Secara Manual di Frontend
-          // Kita set tanggal kadaluarsa ke masa lalu agar browser menghapusnya
-          document.cookie =
-            "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
-
-          // 3. Reset State Aplikasi
-          set({ user: null, accessToken: null, isAuthenticated: false });
-
-          // 4. Redirect ke login (Opsional, biasanya ditangani di component)
-          window.location.href = "/login";
+          console.error("Logout server error:", error);
         }
+
+        // Hapus state client
+        document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
+
+        // Hapus state client
+        set({ user: null, accessToken: null, isAuthenticated: false });
+        
+        // Hapus localStorage persist
+        localStorage.removeItem("we-auth-storage");
+
+        // Redirect paksa
+        window.location.href = "/login";
       },
     }),
     {
-      name: "auth-storage",
+      name: "we-auth-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
