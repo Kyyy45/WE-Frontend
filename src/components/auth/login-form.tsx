@@ -30,6 +30,10 @@ const ErrorMsg = ({ msg }: { msg?: string }) =>
     </p>
   ) : null;
 
+const setAuthCookie = (token: string) => {
+  document.cookie = `refreshToken=${token}; path=/; secure; samesite=lax; max-age=604800`;
+};
+
 export function LoginForm({
   className,
   ...props
@@ -48,24 +52,26 @@ export function LoginForm({
 
   const onSubmit = async (data: LoginValues) => {
     try {
-      // 1. POST Login: Backend set cookies (accessToken & refreshToken)
-      await api.post("/auth/login", data);
+      // 1. POST Login: Backend sekarang mengembalikan token di body response juga
+      const response = await api.post("/auth/login", data);
 
-      // 2. Fetch Access Token string lewat endpoint refresh
-      const { data: refreshRes } = await api.post<{
-        data: { accessToken: string };
-      }>("/auth/refresh");
-      const accessToken = refreshRes.data.accessToken;
+      // Ambil token dari response body
+      const { accessToken, refreshToken } = response.data.data;
 
-      // 3. Simpan token sementara ke store
+      // 2. Simpan token akses sementara agar request profil valid
       useAuthStore.getState().setAccessToken(accessToken);
 
-      // 4. Fetch User Profile
-      const { data: profileRes } = await api.get<{ data: User }>("/users/me");
+      // 3. Fetch User Profile menggunakan token baru
+      const { data: profileRes } = await api.get<{ data: User }>("/users/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       const userData = profileRes.data;
 
-      // 5. Update State Auth Lengkap
-      setAuth(userData, accessToken);
+      // 4. Update State Auth Lengkap (3 Parameter: User, AccessToken, RefreshToken)
+      setAuth(userData, accessToken, refreshToken);
+
+      // 5. Set Cookie Manual (Menggunakan helper function)
+      setAuthCookie(refreshToken);
 
       toast.success(`Selamat datang kembali, ${userData.fullName}`);
       router.push("/dashboard");
