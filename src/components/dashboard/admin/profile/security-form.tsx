@@ -21,7 +21,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/validations";
 
 export function SecurityForm() {
-  // State untuk toggle visibility password
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,17 +39,27 @@ export function SecurityForm() {
       await api.patch("/users/me/password", {
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
+        confirmNewPassword: data.confirmPassword,
       });
 
-      toast.success("Password berhasil diubah!");
+      toast.success(
+        "Password berhasil diubah! Silakan login ulang jika diperlukan."
+      );
       reset();
-      // Reset visibility state setelah sukses
+
+      // Reset visibility
       setShowOldPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data?.message || "Gagal mengubah password");
+        // Tampilkan pesan spesifik dari backend jika ada
+        const msg =
+          error.response?.data?.message ||
+          "Gagal mengubah password. Pastikan password lama benar.";
+        toast.error(msg);
+      } else {
+        toast.error("Terjadi kesalahan sistem");
       }
     }
   };
@@ -60,8 +69,7 @@ export function SecurityForm() {
       <CardHeader>
         <CardTitle className="text-foreground">Ganti Kata Sandi</CardTitle>
         <CardDescription className="text-muted-foreground">
-          Gunakan minimal 8 karakter kombinasi huruf besar, kecil, angka, dan
-          simbol.
+          Pastikan Anda mengingat password baru Anda.
         </CardDescription>
       </CardHeader>
 
@@ -69,21 +77,20 @@ export function SecurityForm() {
         <CardContent className="space-y-4">
           {/* PASSWORD LAMA */}
           <div className="grid gap-2">
-            <Label htmlFor="oldPassword" className="text-foreground">
-              Password Lama
-            </Label>
+            <Label htmlFor="oldPassword">Password Lama</Label>
             <div className="relative">
               <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="oldPassword"
                 type={showOldPassword ? "text" : "password"}
                 {...register("oldPassword")}
-                className="pl-9 pr-10 bg-background border-input"
+                className="pl-9 pr-10"
+                placeholder="Masukkan password saat ini"
               />
               <button
                 type="button"
                 onClick={() => setShowOldPassword(!showOldPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
               >
                 {showOldPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -101,21 +108,20 @@ export function SecurityForm() {
 
           {/* PASSWORD BARU */}
           <div className="grid gap-2">
-            <Label htmlFor="newPassword" className="text-foreground">
-              Password Baru
-            </Label>
+            <Label htmlFor="newPassword">Password Baru</Label>
             <div className="relative">
               <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="newPassword"
                 type={showNewPassword ? "text" : "password"}
                 {...register("newPassword")}
-                className="pl-9 pr-10 bg-background border-input"
+                className="pl-9 pr-10"
+                placeholder="Minimal 8 karakter"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
               >
                 {showNewPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -131,23 +137,22 @@ export function SecurityForm() {
             )}
           </div>
 
-          {/* KONFIRMASI PASSWORD */}
+          {/* KONFIRMASI */}
           <div className="grid gap-2">
-            <Label htmlFor="confirmPassword" className="text-foreground">
-              Konfirmasi Password Baru
-            </Label>
+            <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
             <div className="relative">
               <Lock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 {...register("confirmPassword")}
-                className="pl-9 pr-10 bg-background border-input"
+                className="pl-9 pr-10"
+                placeholder="Ulangi password baru"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -164,7 +169,7 @@ export function SecurityForm() {
           </div>
         </CardContent>
 
-        <CardFooter className="border-t border-border px-6 py-4 bg-muted/20">
+        <CardFooter className="bg-muted/20 px-6 py-4 border-t">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
@@ -172,10 +177,7 @@ export function SecurityForm() {
                 Memproses...
               </>
             ) : (
-              <>
-                <Lock className="mr-2 h-4 w-4" />
-                Ganti Password
-              </>
+              "Simpan Password Baru"
             )}
           </Button>
         </CardFooter>

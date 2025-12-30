@@ -74,7 +74,12 @@ export function LoginForm({
       setAuthCookie(refreshToken);
 
       toast.success(`Selamat datang kembali, ${userData.fullName}`);
-      router.push("/dashboard");
+
+      if (userData.role === "admin") {
+        router.replace("/dashboard/admin");
+      } else {
+        router.replace("/dashboard/siswa");
+      }
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         toast.error(error.response?.data?.message || "Kredensial salah");
