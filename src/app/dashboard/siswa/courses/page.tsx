@@ -43,10 +43,10 @@ export default function MyCoursesPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Endpoint: GET /enrollments/me
         const { data } = await api.get<ApiResponse<Enrollment[]>>(
           "/enrollments/me"
         );
+        console.log("Enrollment Data:", data.data); // Cek console browser untuk debug
         setEnrollments(data.data || []);
       } catch (error) {
         console.error("Gagal memuat kelas:", error);
@@ -59,47 +59,41 @@ export default function MyCoursesPage() {
     fetchData();
   }, []);
 
-  // 2. Logic Guard: Cek Akses Sebelum Masuk
+  // 2. Logic Guard: Cek Akses
   const handleAccessCourse = async (courseId: string, enrollmentId: string) => {
     try {
       setCheckingId(enrollmentId);
-
-      // Validasi via API: GET /enrollments/me/:courseId
-      // Ini memastikan user masih punya akses valid (tidak expired/suspend) di server
+      // Validasi ke backend
       await api.get(`/enrollments/me/${courseId}`);
 
-      // Jika OK, redirect ke halaman materi (LMS Player)
-      // Note: Halaman Player belum dibuat, kita arahkan ke placeholder dulu
-      // router.push(`/dashboard/siswa/courses/${courseId}/learn`);
-      toast.info("Masuk ke mode belajar... (Fitur Player di Fase selanjutnya)");
+      toast.success("Masuk ke mode belajar...");
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.response?.status === 404) {
-          toast.error("Akses ditolak: Anda tidak terdaftar di kelas ini.");
-        } else {
-          toast.error("Gagal memvalidasi akses kelas.");
-        }
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        toast.error("Akses ditolak: Anda tidak terdaftar.");
+      } else {
+        toast.error("Gagal memvalidasi akses kelas.");
       }
     } finally {
       setCheckingId(null);
     }
   };
 
-  // 3. Logic Filter Client-Side
+  // 3. Logic Filter (PERBAIKAN UTAMA DISINI)
   const filteredEnrollments = enrollments.filter((enrollment) => {
-    // Type Guard: Pastikan courseId adalah object (populated)
-    const course =
-      typeof enrollment.courseId === "object"
+    const courseData =
+      enrollment.course ||
+      (typeof enrollment.courseId === "object"
         ? (enrollment.courseId as Course)
-        : null;
-    if (!course) return false;
+        : null);
 
-    // Filter by Search Title
-    const matchesSearch = course.title
+    if (!courseData) return false;
+
+    // Filter Search
+    const matchesSearch = courseData.title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
 
-    // Filter by Status
+    // Filter Status
     const matchesStatus =
       statusFilter === "all" || enrollment.status === statusFilter;
 
@@ -116,7 +110,6 @@ export default function MyCoursesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Kelas Saya</h1>
         <p className="text-base text-muted-foreground">
@@ -124,7 +117,7 @@ export default function MyCoursesPage() {
         </p>
       </div>
 
-      {/* Toolbar: Search & Filter */}
+      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -136,7 +129,6 @@ export default function MyCoursesPage() {
           />
         </div>
 
-        {/* Filter Select */}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-45 bg-background">
             <SelectValue placeholder="Status" />
@@ -155,7 +147,8 @@ export default function MyCoursesPage() {
       {filteredEnrollments.length > 0 ? (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredEnrollments.map((enrollment) => {
-            const course = enrollment.courseId as Course; // Safe casting karena sudah difilter di atas
+            // [FIX] Ambil data course yang benar untuk ditampilkan
+            const course = (enrollment.course || enrollment.courseId) as Course;
             const isProcessing = checkingId === enrollment.id;
 
             return (
@@ -163,9 +156,8 @@ export default function MyCoursesPage() {
                 key={enrollment.id}
                 className="overflow-hidden flex flex-col hover:shadow-md transition-all duration-300 border-border/60"
               >
-                {/* Thumbnail */}
                 <div className="relative aspect-video bg-muted border-b border-border/50">
-                  {course.thumbnailUrl ? (
+                  {course?.thumbnailUrl ? (
                     <Image
                       src={course.thumbnailUrl}
                       alt={course.title}
@@ -183,20 +175,18 @@ export default function MyCoursesPage() {
                   </div>
                 </div>
 
-                {/* Content */}
                 <CardContent className="p-4 flex-1 flex flex-col gap-2">
                   <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    {course.level.replace("_", " ")}
+                    {course?.level ? course.level.replace("_", " ") : "UMUM"}
                   </div>
                   <h3
                     className="font-bold text-lg leading-tight line-clamp-2"
-                    title={course.title}
+                    title={course?.title}
                   >
-                    {course.title}
+                    {course?.title || "Judul Tidak Tersedia"}
                   </h3>
                 </CardContent>
 
-                {/* Footer Action */}
                 <CardFooter className="p-4 pt-0">
                   <Button
                     className="w-full"
@@ -204,7 +194,9 @@ export default function MyCoursesPage() {
                       enrollment.status === "active" ? "default" : "secondary"
                     }
                     disabled={enrollment.status !== "active" || isProcessing}
-                    onClick={() => handleAccessCourse(course.id, enrollment.id)}
+                    onClick={() =>
+                      course && handleAccessCourse(course.id, enrollment.id)
+                    }
                   >
                     {isProcessing ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -230,7 +222,6 @@ export default function MyCoursesPage() {
           })}
         </div>
       ) : (
-        // Empty State
         <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-muted/10">
           <div className="bg-muted p-4 rounded-full mb-4">
             <BookOpen className="h-8 w-8 text-muted-foreground" />
@@ -262,7 +253,6 @@ export default function MyCoursesPage() {
   );
 }
 
-// Helper Component untuk Badge Status
 function StatusBadge({ status }: { status: EnrollmentStatus }) {
   const styles = {
     active: "bg-green-100 text-green-700 border-green-200",

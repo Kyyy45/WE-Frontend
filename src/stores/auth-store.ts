@@ -8,7 +8,6 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
 
-  // Actions
   setAuth: (user: User, accessToken: string) => void;
   setAccessToken: (token: string) => void;
   updateUser: (user: Partial<User>) => void;
@@ -34,19 +33,24 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Panggil backend untuk clear httpOnly cookies
+          // 1. Panggil backend untuk invalidasi token di DB
           await api.post("/auth/logout");
         } catch (error) {
           console.error("Logout server error:", error);
         }
 
-        // Hapus state client
+        // 2. Hapus Cookie Browser Secara Manual
+        // Backend tidak bisa menghapus cookie ini karena dibuat oleh Frontend
+        document.cookie =
+          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
+
+        // 3. Reset State Aplikasi
         set({ user: null, accessToken: null, isAuthenticated: false });
 
-        // Hapus localStorage persist
+        // 4. Hapus Storage
         localStorage.removeItem("we-auth-storage");
 
-        // Redirect paksa
+        // 5. Redirect ke Login
         window.location.href = "/login";
       },
     }),
