@@ -5,9 +5,8 @@ import axios, {
 } from "axios";
 import { useAuthStore } from "@/stores/auth-store";
 
-// URL Backend (Pastikan env ini benar di Vercel)
-const baseURL =
-  process.env.NEXT_PUBLIC_API_URL || "https://we-backend-five.vercel.app/api";
+// URL Backend
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://we-backend-five.vercel.app/api';
 
 export const api = axios.create({
   baseURL,
@@ -25,9 +24,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 // 1. Request Interceptor: Tempel Access Token dari State jika ada
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Ambil token langsung dari State (Zustand)
     const token = useAuthStore.getState().accessToken;
-
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -69,6 +66,7 @@ api.interceptors.response.use(
 
     // Jika error 401 dan belum pernah retry
     if (error.response?.status === 401 && !originalRequest._retry) {
+      
       // Jangan loop jika yang error adalah login atau refresh itu sendiri
       if (
         originalRequest.url?.includes("/auth/login") ||
@@ -89,29 +87,23 @@ api.interceptors.response.use(
       try {
         // Panggil endpoint refresh (Backend baca cookie refreshToken)
         const { data } = await api.post("/auth/refresh");
-
+        
         // Backend return: { success: true, data: { accessToken: "..." } }
         const newAccessToken = data.data.accessToken;
 
-        // Update state di frontend
+        // Update state
         useAuthStore.getState().setAccessToken(newAccessToken);
-
-        // Proses antrian request lain yang menunggu
+        
+        // Proses antrian
         processQueue(null, newAccessToken);
 
         // Ulangi request asli dengan token baru
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        }
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
         // Token habis total -> Logout & Redirect Login
         useAuthStore.getState().logout();
-
-        // Optional: Redirect ke login page jika perlu (via window.location)
-        // window.location.href = "/login";
-
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

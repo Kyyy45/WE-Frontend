@@ -41,11 +41,8 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Hapus state client
-        document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
-
-        // Hapus state client
         set({ user: null, accessToken: null, isAuthenticated: false });
-        
+
         // Hapus localStorage persist
         localStorage.removeItem("we-auth-storage");
 
