@@ -7,85 +7,93 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { User } from "@/types/user";
+import { AxiosError } from "axios";
 
 function GoogleCallbackContent() {
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const router = useRouter();
-  const processed = useRef(false);
+
+  // Ref untuk memastikan hanya jalan 1x (Anti-Strict Mode)
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (processed.current) return;
-    processed.current = true;
+    const error = searchParams.get("error");
 
-    const handleCallback = async () => {
-      const error = searchParams.get("error");
-      if (error) {
-        toast.error("Gagal login Google: " + error);
-        router.replace("/login");
-        return;
-      }
+    if (error) {
+      toast.error("Gagal login Google: " + error);
+      router.replace("/login");
+      return;
+    }
 
-      const urlAccessToken = searchParams.get("accessToken");
-      const urlRefreshToken = searchParams.get("refreshToken");
-
-      if (urlAccessToken && urlRefreshToken) {
-        console.log("✅ Token ditemukan di URL (Bypass Cookie)");
-
-        try {
-          // A. Simpan Access Token ke State
-          useAuthStore.getState().setAccessToken(urlAccessToken);
-
-          // B. Simpan Refresh Token ke Cookie Browser secara MANUAL
-          // Agar sesi bertahan saat refresh page (karena cookie backend diblokir)
-          document.cookie = `refreshToken=${urlRefreshToken}; path=/; secure; samesite=lax; max-age=604800`;
-
-          // C. Ambil Profil User menggunakan token dari URL
-          const { data: profileRes } = await api.get<{ data: User }>(
-            "/users/me",
-            {
-              headers: { Authorization: `Bearer ${urlAccessToken}` },
-            }
-          );
-
-          // D. Update State Auth Global
-          setAuth(profileRes.data, urlAccessToken);
-
-          toast.success(`Selamat datang, ${profileRes.data.fullName}`);
-          router.replace("/dashboard/siswa");
-          return;
-        } catch (err) {
-          console.error("Gagal memproses token URL:", err);
-          toast.error("Gagal login dengan token URL.");
-          router.replace("/login");
-          return;
-        }
-      }
+    const hydrateGoogleSession = async () => {
+      // Cegah double-fetch di React Strict Mode
+      if (hasFetched.current) return;
+      hasFetched.current = true;
 
       try {
-        console.log("🔄 Mencoba ambil dari cookie (Fallback)...");
-        const { data: refreshRes } = await api.post("/auth/refresh");
+        console.log("🔄 Menunggu browser menyimpan cookie...");
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        useAuthStore.getState().setAccessToken(refreshRes.data.accessToken);
-        const { data: profileRes } = await api.get("/users/me");
+        console.log("🚀 Mengambil Access Token...");
+        // 1. Ambil Access Token String via Refresh Endpoint
+        // Browser otomatis mengirim cookie 'refreshToken' (HttpOnly)
+        const { data: refreshRes } = await api.post<{
+          data: { accessToken: string };
+        }>("/auth/refresh");
 
-        setAuth(profileRes.data, refreshRes.data.accessToken);
-        toast.success("Login berhasil!");
-        router.replace("/dashboard/siswa");
-      } catch (err) {
-        console.error("Gagal auth cookie:", err);
+        console.log("✅ Token didapat, mengambil profil...");
+        const accessToken = refreshRes.data.accessToken;
+
+        // 2. Simpan token ke Memory State (untuk interceptor)
+        useAuthStore.getState().setAccessToken(accessToken);
+
+        // 3. Ambil Data Profil User
+        const { data: profileRes } = await api.get<{ data: User }>("/users/me");
+        const userData = profileRes.data;
+
+        // 4. Update Global State
+        setAuth(userData, accessToken);
+
+        toast.success(
+          `Login Google berhasil! Selamat datang, ${userData.fullName}`
+        );
+        router.replace("/dashboard");
+      } catch (err: unknown) {
+        console.error("❌ Google Auth Handshake Failed:", err);
+
+        // Cek apakah error dari Axios dan statusnya 401
+        if (err instanceof AxiosError && err.response?.status === 401) {
+          console.error(
+            "⚠️ Penyebab: Cookie refreshToken tidak ditemukan atau tidak valid."
+          );
+          toast.error(
+            "Gagal memverifikasi sesi. Pastikan browser mengizinkan cookie."
+          );
+        } else {
+          toast.error("Gagal memverifikasi sesi Google. Silakan coba lagi.");
+        }
+
         router.replace("/login");
       }
     };
 
-    handleCallback();
+    hydrateGoogleSession();
   }, [searchParams, setAuth, router]);
 
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="text-center space-y-4">
-        <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-        <p className="text-muted-foreground">Memproses login...</p>
+    <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-background">
+      <div className="relative">
+        <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+        <Loader2 className="relative h-12 w-12 md:h-16 md:w-16 animate-spin text-primary" />
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+          Menghubungkan Akun Google...
+        </h3>
+        <p className="text-muted-foreground text-sm md:text-base animate-pulse max-w-xs mx-auto">
+          Mohon tunggu sebentar, kami sedang memverifikasi keamanan sesi Anda.
+        </p>
       </div>
     </div>
   );
@@ -93,7 +101,13 @@ function GoogleCallbackContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="h-screen bg-background" />}>
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      }
+    >
       <GoogleCallbackContent />
     </Suspense>
   );
