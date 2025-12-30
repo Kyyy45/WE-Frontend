@@ -12,14 +12,17 @@ function DashboardRedirect() {
 
   useEffect(() => {
     const checkAuthAndRedirect = () => {
+      // 1. Jika belum login -> Login
       if (!isAuthenticated || !user) {
         router.replace("/login");
         return;
       }
 
+      // 2. Pertahankan query params (jika ada)
       const queryString = searchParams.toString();
       const query = queryString ? `?${queryString}` : "";
 
+      // 3. Arahkan ke folder dashboard yang benar
       if (user.role === "admin") {
         router.replace(`/dashboard/admin${query}`);
       } else {
@@ -27,6 +30,7 @@ function DashboardRedirect() {
       }
     };
 
+    // Timeout agar tidak bentrok dengan proses setAuth
     const timeout = setTimeout(() => {
       checkAuthAndRedirect();
     }, 100);
@@ -41,7 +45,7 @@ function DashboardRedirect() {
         <Loader2 className="relative h-12 w-12 md:h-16 md:w-16 animate-spin text-primary" />
       </div>
       <p className="text-muted-foreground text-sm md:text-base font-medium animate-pulse">
-        Mengarahkan ke dashboard {user?.role === "admin" ? "Admin" : "Siswa"}...
+        Memuat dashboard...
       </p>
     </div>
   );

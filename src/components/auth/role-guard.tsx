@@ -17,16 +17,24 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
   const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
+    // Timeout kecil untuk memastikan hydration state selesai
     const timer = setTimeout(() => {
+      // 1. Cek Login
       if (!isAuthenticated || !user) {
         router.replace("/login");
-      } else if (!allowedRoles.includes(user.role)) {
+        return;
+      }
+
+      // 2. Cek Role
+      if (!allowedRoles.includes(user.role)) {
+        // Jika salah kamar, lempar ke dashboard yang sesuai role aslinya
         if (user.role === "admin") {
           router.replace("/dashboard/admin");
         } else {
           router.replace("/dashboard/siswa");
         }
       } else {
+        // 3. Lolos Guard
         setIsChecked(true);
       }
     }, 100);
@@ -34,10 +42,11 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     return () => clearTimeout(timer);
   }, [isAuthenticated, user, allowedRoles, router]);
 
+  // Tampilkan loading screen selama pengecekan
   if (!isChecked) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-primary">
-        <Loader2 className="h-12 w-12 animate-spin" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }

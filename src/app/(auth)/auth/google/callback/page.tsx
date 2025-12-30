@@ -51,13 +51,7 @@ function GoogleCallbackContent() {
           // D. Simpan ke Global State
           setAuth(userData, urlAccessToken, urlRefreshToken);
           toast.success(`Selamat datang, ${userData.fullName}`);
-
-          // Redirect Berdasarkan Role
-          if (userData.role === "admin") {
-            router.replace("/dashboard/admin");
-          } else {
-            router.replace("/dashboard/siswa");
-          }
+          router.replace("/dashboard");
           
           return;
         } catch (err) {

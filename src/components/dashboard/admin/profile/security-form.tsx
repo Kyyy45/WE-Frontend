@@ -36,28 +36,33 @@ export function SecurityForm() {
 
   const onSubmit = async (data: ChangePasswordValues) => {
     try {
+      // 1. Kirim Payload
+      // Note: Validasi password match sudah dihandle oleh Zod Resolver
+      // sebelum fungsi ini dipanggil.
       await api.patch("/users/me/password", {
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
-        confirmNewPassword: data.confirmPassword,
+        confirmPassword: data.confirmPassword,
       });
 
-      toast.success("Password berhasil diubah!");
+      toast.success("Password berhasil diubah! Silakan login ulang.");
       reset();
 
+      // Reset visibility toggle
       setShowOldPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
-      if (error instanceof AxiosError) {
-        // Tampilkan pesan error detail dari backend
-        const message =
-          error.response?.data?.message || "Gagal mengubah password";
-        toast.error(message);
+      console.error("Gagal ganti password:", error);
 
-        // Debugging: Cek di console jika ada validasi errors array
-        if (error.response?.data?.errors) {
-          console.error("Validation errors:", error.response.data.errors);
+      if (error instanceof AxiosError) {
+        const errorData = error.response?.data;
+
+        // 2. Handle Error Validasi dari Backend (Jika ada)
+        if (errorData?.errors && Array.isArray(errorData.errors)) {
+          toast.error(errorData.errors[0].msg);
+        } else {
+          toast.error(errorData?.message || "Gagal mengubah password");
         }
       } else {
         toast.error("Terjadi kesalahan sistem");
@@ -87,6 +92,7 @@ export function SecurityForm() {
                 type={showOldPassword ? "text" : "password"}
                 {...register("oldPassword")}
                 className="pl-9 pr-10 bg-background border-input"
+                placeholder="Masukkan password saat ini"
               />
               <button
                 type="button"
@@ -117,6 +123,7 @@ export function SecurityForm() {
                 type={showNewPassword ? "text" : "password"}
                 {...register("newPassword")}
                 className="pl-9 pr-10 bg-background border-input"
+                placeholder="Buat password baru"
               />
               <button
                 type="button"
@@ -147,6 +154,7 @@ export function SecurityForm() {
                 type={showConfirmPassword ? "text" : "password"}
                 {...register("confirmPassword")}
                 className="pl-9 pr-10 bg-background border-input"
+                placeholder="Ulangi password baru"
               />
               <button
                 type="button"
