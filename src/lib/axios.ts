@@ -5,23 +5,22 @@ import axios, {
 } from "axios";
 import { useAuthStore } from "@/stores/auth-store";
 
-// URL Backend
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://we-backend-five.vercel.app/api';
+const baseURL =
+  process.env.NEXT_PUBLIC_API_URL || "https://we-backend-five.vercel.app/api";
 
 export const api = axios.create({
   baseURL,
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Wajib agar cookie dikirim/diterima
+  withCredentials: true, // Mengizinkan pengiriman Cookie
 });
 
-// Interface custom untuk config axios agar support properti _retry
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-// 1. Request Interceptor: Tempel Access Token dari State jika ada
+// Interceptor Request: Sisipkan Access Token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = useAuthStore.getState().accessToken;
@@ -33,6 +32,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Queue Logic untuk menangani multiple request saat refreshing
 interface RetryQueueItem {
   resolve: (value: AxiosResponse | Promise<AxiosResponse>) => void;
   reject: (error?: unknown) => void;
@@ -56,7 +56,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// 2. Response Interceptor: Auto Refresh Token 401
+// Interceptor Response: Handle 401 & Auto Refresh
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
@@ -64,10 +64,9 @@ api.interceptors.response.use(
 
     if (!originalRequest) return Promise.reject(error);
 
-    // Jika error 401 dan belum pernah retry
+    // Jika 401 Unauthorized dan belum pernah dicoba ulang
     if (error.response?.status === 401 && !originalRequest._retry) {
-      
-      // Jangan loop jika yang error adalah login atau refresh itu sendiri
+      // Hindari loop jika endpoint login/refresh sendiri yang error
       if (
         originalRequest.url?.includes("/auth/login") ||
         originalRequest.url?.includes("/auth/refresh")
@@ -85,24 +84,35 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Panggil endpoint refresh (Backend baca cookie refreshToken)
-        const { data } = await api.post("/auth/refresh");
-        
-        // Backend return: { success: true, data: { accessToken: "..." } }
-        const newAccessToken = data.data.accessToken;
+        // Ambil refreshToken dari store (State Management)
+        const refreshToken = useAuthStore.getState().refreshToken;
 
-        // Update state
+        // Panggil Refresh API mengirim token via BODY (Hybrid Strategy)
+        // Ini memastikan refresh berhasil meski Cookie diblokir browser
+        const { data } = await api.post("/auth/refresh", {
+          refreshToken: refreshToken,
+        });
+
+        const newAccessToken = data.data.accessToken;
+        const newRefreshToken = data.data.refreshToken;
+
+        // Update State dengan token baru
         useAuthStore.getState().setAccessToken(newAccessToken);
-        
-        // Proses antrian
+        if (newRefreshToken) {
+          useAuthStore.getState().setRefreshToken(newRefreshToken);
+        }
+
+        // Lanjutkan request yang tertunda
         processQueue(null, newAccessToken);
 
-        // Ulangi request asli dengan token baru
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        // Ulangi request original dengan token baru
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Token habis total -> Logout & Redirect Login
+        // Jika refresh gagal, logout user
         useAuthStore.getState().logout();
         return Promise.reject(refreshError);
       } finally {

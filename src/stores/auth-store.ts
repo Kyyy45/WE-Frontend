@@ -6,25 +6,30 @@ import { User } from "@/types/user";
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
 
-  setAuth: (user: User, accessToken: string) => void;
+  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setAccessToken: (token: string) => void;
+  setRefreshToken: (token: string) => void;
   updateUser: (user: Partial<User>) => void;
   logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
 
-      setAuth: (user, accessToken) =>
-        set({ user, accessToken, isAuthenticated: true }),
+      setAuth: (user, accessToken, refreshToken) =>
+        set({ user, accessToken, refreshToken, isAuthenticated: true }),
 
       setAccessToken: (accessToken) => set({ accessToken }),
+
+      setRefreshToken: (refreshToken) => set({ refreshToken }),
 
       updateUser: (updates) =>
         set((state) => ({
@@ -33,24 +38,27 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // 1. Panggil backend untuk invalidasi token di DB
-          await api.post("/auth/logout");
+          // Kirim refreshToken via body agar backend bisa menghapusnya dari DB
+          // meskipun cookie browser diblokir/tidak terkirim.
+          const { refreshToken } = get();
+          await api.post("/auth/logout", { refreshToken });
         } catch (error) {
           console.error("Logout server error:", error);
         }
 
-        // 2. Hapus Cookie Browser Secara Manual
-        // Backend tidak bisa menghapus cookie ini karena dibuat oleh Frontend
+        // Hapus cookie browser secara paksa
         document.cookie =
           "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
 
-        // 3. Reset State Aplikasi
-        set({ user: null, accessToken: null, isAuthenticated: false });
+        // Reset seluruh state auth
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+        });
 
-        // 4. Hapus Storage
         localStorage.removeItem("we-auth-storage");
-
-        // 5. Redirect ke Login
         window.location.href = "/login";
       },
     }),

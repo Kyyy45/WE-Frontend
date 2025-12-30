@@ -26,22 +26,16 @@ function GoogleCallbackContent() {
         return;
       }
 
-      // 1. AMBIL TOKEN DARI URL (Backend mengirimnya lewat sini)
+      // Ambil token yang dikirim Backend via URL Params
       const urlAccessToken = searchParams.get("accessToken");
       const urlRefreshToken = searchParams.get("refreshToken");
 
       if (urlAccessToken && urlRefreshToken) {
-        console.log("✅ Token diterima dari URL");
-
         try {
-          // A. Simpan Access Token ke State
           useAuthStore.getState().setAccessToken(urlAccessToken);
 
-          // B. Simpan Refresh Token ke Cookie Browser secara MANUAL
-          // Ini WAJIB agar sesi bertahan saat refresh page
           document.cookie = `refreshToken=${urlRefreshToken}; path=/; secure; samesite=lax; max-age=604800`;
 
-          // C. Ambil Data User (Pakai token dari URL)
           const { data: profileRes } = await api.get<{ data: User }>(
             "/users/me",
             {
@@ -49,32 +43,35 @@ function GoogleCallbackContent() {
             }
           );
 
-          // D. Login Sukses & Redirect
-          setAuth(profileRes.data, urlAccessToken);
+          setAuth(profileRes.data, urlAccessToken, urlRefreshToken);
+
           toast.success(`Selamat datang, ${profileRes.data.fullName}`);
           router.replace("/dashboard/siswa");
           return;
         } catch (err) {
-          console.error("Gagal login dengan token URL:", err);
+          console.error("Gagal login via URL token:", err);
           toast.error("Gagal memproses sesi login.");
           router.replace("/login");
           return;
         }
       }
 
-      // 2. Fallback: Jika URL kosong, coba cek cookie (backup logic)
       try {
-        console.log("🔄 Mencoba fallback cookie...");
         const { data: refreshRes } = await api.post("/auth/refresh");
 
-        useAuthStore.getState().setAccessToken(refreshRes.data.accessToken);
+        const newAccessToken = refreshRes.data.accessToken;
+        const newRefreshToken = refreshRes.data.refreshToken;
+
+        useAuthStore.getState().setAccessToken(newAccessToken);
+
         const { data: profileRes } = await api.get("/users/me");
 
-        setAuth(profileRes.data, refreshRes.data.accessToken);
+        setAuth(profileRes.data, newAccessToken, newRefreshToken || "");
+
         toast.success("Login berhasil!");
         router.replace("/dashboard/siswa");
       } catch (err) {
-        console.error("Gagal auth:", err);
+        console.error("Gagal auth fallback:", err);
         router.replace("/login");
       }
     };
