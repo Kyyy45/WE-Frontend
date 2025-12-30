@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { profileSchema, ProfileFormValues } from "@/lib/validations";
 
 export function ProfileForm() {
   const { user, updateUser } = useAuthStore();
+  const router = useRouter();
 
   const {
     register,
@@ -46,6 +48,7 @@ export function ProfileForm() {
           username: res.data.data.username,
         });
         toast.success("Username berhasil diperbarui!");
+        router.refresh();
       }
     } catch (error) {
       if (error instanceof AxiosError) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth-store";
 import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { changePasswordSchema, ChangePasswordValues } from "@/lib/validations";
 
 export function SecurityForm() {
+  const { logout } = useAuthStore();
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -28,7 +30,6 @@ export function SecurityForm() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -36,7 +37,7 @@ export function SecurityForm() {
 
   const onSubmit = async (data: ChangePasswordValues) => {
     try {
-      // 1. Kirim Payload ke Backend
+      // Kirim Payload ke Backend
       await api.patch("/users/me/password", {
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
@@ -44,18 +45,15 @@ export function SecurityForm() {
       });
 
       toast.success("Password berhasil diubah! Silakan login ulang.");
-      reset();
 
-      // Reset visibility
-      setShowOldPassword(false);
-      setShowNewPassword(false);
-      setShowConfirmPassword(false);
-    } catch (error) {
+      // Logout user setelah sukses ganti password
+      await logout();
+    } catch (error: unknown) {
       console.error("Gagal ganti password:", error);
 
       if (error instanceof AxiosError) {
         const errorData = error.response?.data;
-        // 2. Handle Error Validasi
+        // Handle Error Validasi
         if (errorData?.errors && Array.isArray(errorData.errors)) {
           toast.error(errorData.errors[0].msg);
         } else {

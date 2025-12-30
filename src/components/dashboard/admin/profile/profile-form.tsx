@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { api } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { profileSchema, ProfileFormValues } from "@/lib/validations";
 
 export function ProfileForm() {
   const { user, updateUser } = useAuthStore();
+  const router = useRouter();
 
   const {
     register,
@@ -46,6 +48,7 @@ export function ProfileForm() {
           username: res.data.data.username,
         });
         toast.success("Username berhasil diperbarui!");
+        router.refresh();
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -61,7 +64,7 @@ export function ProfileForm() {
       <CardHeader>
         <CardTitle className="text-foreground">Data Diri</CardTitle>
         <CardDescription className="text-muted-foreground">
-          Kelola identitas akun Admin Anda di Worldpedia.
+          Kelola identitas akun Anda di Worldpedia.
         </CardDescription>
       </CardHeader>
 
@@ -92,7 +95,7 @@ export function ProfileForm() {
               />
             </div>
             <p className="text-[10px] text-muted-foreground">
-              Untuk mengubah nama lengkap, silakan hubungi tim IT Support.
+              Untuk mengubah nama lengkap, silakan hubungi Admin.
             </p>
           </div>
 

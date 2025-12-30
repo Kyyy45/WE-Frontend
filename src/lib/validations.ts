@@ -177,10 +177,10 @@ export type VerifyValues = z.infer<typeof verifySchema>;
 export type ResendVerificationValues = z.infer<typeof resendVerificationSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 
-// Form Editor Types
 export type FormEditorValues = z.infer<typeof formEditorSchema>;
 export type FormSectionItem = z.infer<typeof sectionSchema>;
 
