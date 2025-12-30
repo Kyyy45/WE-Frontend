@@ -26,16 +26,19 @@ function GoogleCallbackContent() {
         return;
       }
 
-      // Ambil token yang dikirim Backend via URL Params
+      // 1. AMBIL TOKEN DARI URL
       const urlAccessToken = searchParams.get("accessToken");
       const urlRefreshToken = searchParams.get("refreshToken");
 
       if (urlAccessToken && urlRefreshToken) {
         try {
+          // A. Simpan Access Token ke State sementara untuk fetch profile
           useAuthStore.getState().setAccessToken(urlAccessToken);
 
+          // B. Simpan Refresh Token ke Cookie Browser (Manual Backup)
           document.cookie = `refreshToken=${urlRefreshToken}; path=/; secure; samesite=lax; max-age=604800`;
 
+          // C. Ambil Data User & Cek Role
           const { data: profileRes } = await api.get<{ data: User }>(
             "/users/me",
             {
@@ -43,33 +46,49 @@ function GoogleCallbackContent() {
             }
           );
 
-          setAuth(profileRes.data, urlAccessToken, urlRefreshToken);
+          const userData = profileRes.data;
 
-          toast.success(`Selamat datang, ${profileRes.data.fullName}`);
-          router.replace("/dashboard/siswa");
+          // D. Simpan ke Global State
+          setAuth(userData, urlAccessToken, urlRefreshToken);
+          toast.success(`Selamat datang, ${userData.fullName}`);
+
+          // Redirect Berdasarkan Role
+          if (userData.role === "admin") {
+            router.replace("/dashboard/admin");
+          } else {
+            router.replace("/dashboard/siswa");
+          }
+          
           return;
         } catch (err) {
-          console.error("Gagal login via URL token:", err);
+          console.error("Gagal login dengan token URL:", err);
           toast.error("Gagal memproses sesi login.");
           router.replace("/login");
           return;
         }
       }
 
+      // 2. Fallback (Jika token tidak ada di URL, coba refresh token via cookie)
       try {
         const { data: refreshRes } = await api.post("/auth/refresh");
-
         const newAccessToken = refreshRes.data.accessToken;
-        const newRefreshToken = refreshRes.data.refreshToken;
-
+        
         useAuthStore.getState().setAccessToken(newAccessToken);
+        const { data: profileRes } = await api.get<{ data: User }>("/users/me");
+        const userData = profileRes.data;
 
-        const { data: profileRes } = await api.get("/users/me");
+        // Ambil refresh token baru atau gunakan string kosong jika tidak di-rotate
+        const newRefreshToken = refreshRes.data.refreshToken || "";
 
-        setAuth(profileRes.data, newAccessToken, newRefreshToken || "");
-
+        setAuth(userData, newAccessToken, newRefreshToken);
         toast.success("Login berhasil!");
-        router.replace("/dashboard/siswa");
+
+        // Redirect Berdasarkan Role (Fallback)
+        if (userData.role === "admin") {
+          router.replace("/dashboard/admin");
+        } else {
+          router.replace("/dashboard/siswa");
+        }
       } catch (err) {
         console.error("Gagal auth fallback:", err);
         router.replace("/login");

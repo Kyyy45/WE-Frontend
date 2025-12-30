@@ -42,22 +42,23 @@ export function SecurityForm() {
         confirmNewPassword: data.confirmPassword,
       });
 
-      toast.success(
-        "Password berhasil diubah! Silakan login ulang jika diperlukan."
-      );
+      toast.success("Password berhasil diubah!");
       reset();
 
-      // Reset visibility
       setShowOldPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
       if (error instanceof AxiosError) {
-        // Tampilkan pesan spesifik dari backend jika ada
-        const msg =
-          error.response?.data?.message ||
-          "Gagal mengubah password. Pastikan password lama benar.";
-        toast.error(msg);
+        // Tampilkan pesan error detail dari backend
+        const message =
+          error.response?.data?.message || "Gagal mengubah password";
+        toast.error(message);
+
+        // Debugging: Cek di console jika ada validasi errors array
+        if (error.response?.data?.errors) {
+          console.error("Validation errors:", error.response.data.errors);
+        }
       } else {
         toast.error("Terjadi kesalahan sistem");
       }
@@ -69,7 +70,8 @@ export function SecurityForm() {
       <CardHeader>
         <CardTitle className="text-foreground">Ganti Kata Sandi</CardTitle>
         <CardDescription className="text-muted-foreground">
-          Pastikan Anda mengingat password baru Anda.
+          Gunakan minimal 8 karakter kombinasi huruf besar, kecil, angka, dan
+          simbol.
         </CardDescription>
       </CardHeader>
 
@@ -84,13 +86,12 @@ export function SecurityForm() {
                 id="oldPassword"
                 type={showOldPassword ? "text" : "password"}
                 {...register("oldPassword")}
-                className="pl-9 pr-10"
-                placeholder="Masukkan password saat ini"
+                className="pl-9 pr-10 bg-background border-input"
               />
               <button
                 type="button"
                 onClick={() => setShowOldPassword(!showOldPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showOldPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -115,13 +116,12 @@ export function SecurityForm() {
                 id="newPassword"
                 type={showNewPassword ? "text" : "password"}
                 {...register("newPassword")}
-                className="pl-9 pr-10"
-                placeholder="Minimal 8 karakter"
+                className="pl-9 pr-10 bg-background border-input"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showNewPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -146,13 +146,12 @@ export function SecurityForm() {
                 id="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 {...register("confirmPassword")}
-                className="pl-9 pr-10"
-                placeholder="Ulangi password baru"
+                className="pl-9 pr-10 bg-background border-input"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -169,7 +168,7 @@ export function SecurityForm() {
           </div>
         </CardContent>
 
-        <CardFooter className="bg-muted/20 px-6 py-4 border-t">
+        <CardFooter className="border-t border-border px-6 py-4 bg-muted/20">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
@@ -177,7 +176,10 @@ export function SecurityForm() {
                 Memproses...
               </>
             ) : (
-              "Simpan Password Baru"
+              <>
+                <Lock className="mr-2 h-4 w-4" />
+                Ganti Password
+              </>
             )}
           </Button>
         </CardFooter>
