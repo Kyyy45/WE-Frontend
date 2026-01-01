@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Loader2, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner"; // Import toast untuk feedback error
+import { toast } from "sonner";
+import { AxiosError } from "axios"; // Import AxiosError
 
 export default function UsersPage() {
   const [data, setData] = useState<User[]>([]);
@@ -24,7 +25,6 @@ export default function UsersPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      // Panggil endpoint users
       const res = await api.get("/users");
 
       console.log("DEBUG API RESPONSE:", res.data);
@@ -32,35 +32,29 @@ export default function UsersPage() {
       const responseData = res.data.data;
       let users: User[] = [];
 
-      // [FIX LOGIC PARSING] Sesuaikan dengan format 'items' dari backend
       if (Array.isArray(responseData)) {
-        // 1. Jika array langsung
         users = responseData;
       } else if (responseData?.items && Array.isArray(responseData.items)) {
-        // 2. [MATCH] Jika format pagination menggunakan 'items' (Sesuai Log Anda)
         users = responseData.items;
       } else if (responseData?.results && Array.isArray(responseData.results)) {
-        // 3. Jika format pagination menggunakan 'results'
         users = responseData.results;
       } else if (responseData?.users && Array.isArray(responseData.users)) {
-        // 4. Jika format pagination menggunakan 'users'
         users = responseData.users;
-      } else {
-        console.warn("Format data user tidak dikenali:", responseData);
       }
 
-      console.log("Users berhasil di-parse:", users);
       setData(users);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
       console.error("Gagal mengambil data user:", error);
-      
-      // Handle 401 Unauthorized secara spesifik jika perlu
-      if (error.response?.status === 401) {
-        // Biasanya middleware axios sudah handle logout, tapi kita bisa kasih info extra
-        toast.error("Sesi habis. Silakan login ulang.");
+
+      // [FIX] Hapus 'any'
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401) {
+          toast.error("Sesi habis. Silakan login ulang.");
+        } else {
+          toast.error("Gagal memuat data pengguna.");
+        }
       } else {
-        toast.error("Gagal memuat data pengguna.");
+        toast.error("Terjadi kesalahan yang tidak diketahui.");
       }
     } finally {
       setLoading(false);
@@ -101,9 +95,10 @@ export default function UsersPage() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Users className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                {/* [FIX] Ganti w-[250px] jadi w-64 */}
                 <Input
                   placeholder="Cari nama, email..."
-                  className="pl-9 w-62.5"
+                  className="pl-9 w-64"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                 />

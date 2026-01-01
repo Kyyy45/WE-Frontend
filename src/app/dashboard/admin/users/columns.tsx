@@ -1,13 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { User } from "@/types/user";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { id } from "date-fns/locale";
-import { MoreHorizontal, Trash2, Shield, User as UserIcon } from "lucide-react";
+import { id as idLocale } from "date-fns/locale";
+import {
+  MoreHorizontal,
+  Trash2,
+  Shield,
+  User as UserIcon,
+  Edit,
+  Copy,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,56 +27,94 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/axios";
 import { toast } from "sonner";
+import { AxiosError } from "axios"; // [FIX] Import ini
+// [FIX] Pastikan file ini ada di path yang benar
+import { EditUserDialog } from "@/components/dashboard/admin/users/edit-user-dialog";
 
-// Definisi aksi (Delete, dll) di sini agar bisa akses refresh function nanti
 interface ActionProps {
   user: User;
   onSuccess: () => void;
 }
 
 const UserActions = ({ user, onSuccess }: ActionProps) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const userId = user._id || user.id;
+
   const handleDelete = async () => {
+    if (!userId) {
+      toast.error("ID User tidak ditemukan");
+      return;
+    }
+
     if (!confirm(`Apakah Anda yakin ingin menghapus user ${user.username}?`))
       return;
 
     try {
-      await api.delete(`/users/${user.id}`);
+      await api.delete(`/users/${userId}`);
       toast.success("User berhasil dihapus");
       onSuccess();
-    } catch {
-      toast.error("Gagal menghapus user");
+    } catch (error) {
+      // [FIX] Hapus 'any', gunakan type narrowing
+      if (error instanceof AxiosError) {
+        const msg = error.response?.data?.message || "Gagal menghapus user";
+        toast.error(msg);
+      } else {
+        toast.error("Terjadi kesalahan sistem");
+      }
     }
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-        <DropdownMenuItem
-          onClick={() => navigator.clipboard.writeText(user.id)}
-        >
-          Salin User ID
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Hapus User
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <EditUserDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        user={user}
+        onSuccess={onSuccess}
+      />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+
+          <DropdownMenuItem
+            onClick={() => {
+              if (userId) {
+                navigator.clipboard.writeText(userId);
+                toast.success("ID disalin");
+              }
+            }}
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Salin ID
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onSelect={() => setShowEditDialog(true)}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit User
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            onClick={handleDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Hapus User
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 };
 
-// Fungsi pembantu untuk membuat columns dengan refresh callback
 export const getColumns = (onDataChanged: () => void): ColumnDef<User>[] => [
   {
     id: "select",
@@ -102,14 +148,15 @@ export const getColumns = (onDataChanged: () => void): ColumnDef<User>[] => [
           <Avatar className="h-9 w-9">
             <AvatarImage src={user.avatarUrl || ""} alt={user.fullName} />
             <AvatarFallback>
-              {user.fullName.substring(0, 2).toUpperCase()}
+              {user.fullName?.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-medium truncate max-w-37.5">
+            {/* [FIX] Gunakan max-w-40 (160px) sebagai standar pengganti [150px] */}
+            <span className="font-medium truncate max-w-40">
               {user.fullName}
             </span>
-            <span className="text-xs text-muted-foreground truncate max-w-37.5">
+            <span className="text-xs text-muted-foreground truncate max-w-40">
               {user.email}
             </span>
           </div>
@@ -152,9 +199,9 @@ export const getColumns = (onDataChanged: () => void): ColumnDef<User>[] => [
       let variant: "default" | "secondary" | "destructive" | "outline" =
         "outline";
 
-      if (status === "active") variant = "default"; // Hijau/Hitam (tergantung theme)
-      if (status === "suspended") variant = "destructive"; // Merah
-      if (status === "pending") variant = "secondary"; // Abu-abu
+      if (status === "active") variant = "default";
+      if (status === "suspended") variant = "destructive";
+      if (status === "pending") variant = "secondary";
 
       return (
         <Badge variant={variant} className="capitalize">
@@ -167,10 +214,11 @@ export const getColumns = (onDataChanged: () => void): ColumnDef<User>[] => [
     accessorKey: "createdAt",
     header: "Bergabung",
     cell: ({ row }) => {
+      if (!row.original.createdAt) return "-";
       return (
         <span className="text-muted-foreground text-xs">
           {format(new Date(row.original.createdAt), "dd MMM yyyy", {
-            locale: id,
+            locale: idLocale,
           })}
         </span>
       );
