@@ -4,6 +4,7 @@ export type AuthProvider = "local" | "google";
 
 export interface User {
   id: string;
+  _id?: string;
   fullName: string;
   username: string;
   email: string;
