@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/axios";
 import { User } from "@/types/user";
-import { DataTable } from "@/components/ui/data-table"; // Pastikan path ini benar sesuai struktur project Anda
+import { DataTable } from "@/components/ui/data-table";
 import { getColumns } from "./columns";
 import {
   Card,
@@ -21,19 +21,38 @@ export default function UsersPage() {
   const [filter, setFilter] = useState("");
 
   // Fungsi Fetch Data
+  // ... imports
+
+  // Fungsi Fetch Data
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      // Panggil endpoint GET /users
-      // Asumsi response backend: { success: true, data: { results: User[], ... } } atau { data: User[] }
       const res = await api.get("/users");
 
-      // Sesuaikan dengan struktur response backend Anda
-      // Jika backend mengirim array langsung di res.data.data
-      const users = Array.isArray(res.data.data)
-        ? res.data.data
-        : res.data.data.results || [];
+      // [DEBUGGING] Cek hasil respon di Console Browser (Tekan F12 -> Console)
+      console.log("FULL RESPONSE API USERS:", res.data);
 
+      // LOGIKA PENCOCOKAN DATA YANG LEBIH FLEKSIBEL
+      let users: User[] = [];
+
+      // Kemungkinan 1: Langsung Array (res.data = [...])
+      if (Array.isArray(res.data)) {
+        users = res.data;
+      }
+      // Kemungkinan 2: Terbungkus 'data' (res.data = { data: [...] })
+      else if (Array.isArray(res.data.data)) {
+        users = res.data.data;
+      }
+      // Kemungkinan 3: Pagination / Results (res.data = { data: { results: [...] } })
+      else if (res.data.data?.results && Array.isArray(res.data.data.results)) {
+        users = res.data.data.results;
+      }
+      // Kemungkinan 4: Pagination dengan key 'users' (res.data = { data: { users: [...] } })
+      else if (res.data.data?.users && Array.isArray(res.data.data.users)) {
+        users = res.data.data.users;
+      }
+
+      console.log("Users yang berhasil di-parse:", users);
       setData(users);
     } catch (error) {
       console.error("Gagal mengambil data user:", error);
