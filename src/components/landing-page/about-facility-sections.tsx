@@ -18,6 +18,8 @@ import { SectionWrapper } from "@/components/layout/section-wrapper";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { Highlighter } from "@/components/ui/highlighter";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LandingSectionProps } from "@/types/landing";
 
 const ImageHeader = ({
   src,
@@ -42,7 +44,29 @@ const ImageHeader = ({
   </div>
 );
 
-export default function AboutFacilityBento() {
+export default function AboutFacilityBento({
+  isLoading = false,
+}: LandingSectionProps) {
+  if (isLoading) {
+    return (
+      <SectionWrapper>
+        <Container className="py-12 md:py-24">
+          <div className="mb-12 space-y-4">
+            <Skeleton className="h-10 w-3/4 mx-auto lg:mx-0" />
+            <Skeleton className="h-6 w-1/2 mx-auto lg:mx-0" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+            <Skeleton className="h-96 md:col-span-2 lg:col-span-3 lg:row-span-2 rounded-3xl" />
+            <Skeleton className="h-64 md:col-span-1 lg:col-span-3 rounded-3xl" />
+            <Skeleton className="h-64 md:col-span-1 lg:col-span-2 rounded-3xl" />
+            <Skeleton className="h-64 md:col-span-1 lg:col-span-2 rounded-3xl" />
+            <Skeleton className="h-64 md:col-span-1 lg:col-span-2 rounded-3xl" />
+          </div>
+        </Container>
+      </SectionWrapper>
+    );
+  }
+
   return (
     <SectionWrapper className="bg-background">
       <Container className="py-12 md:py-24">
@@ -162,7 +186,7 @@ const items = [
   {
     title: "Tentang Worldpedia",
     description: (
-      <p>
+      <span className="block">
         Worldpedia Education adalah kursus bahasa Inggris untuk siswa/i mulai
         dari tingkat taman kanak-kanak hingga remaja dan dewasa. Kami melayani
         siswa/i dengan{" "}
@@ -171,7 +195,7 @@ const items = [
         </Highlighter>{" "}
         untuk tidak hanya membuat mereka tumbuh, tetapi juga mengembangkan
         kemampuan mereka untuk siap menyambut masa depan.
-      </p>
+      </span>
     ),
     icon: (
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-foreground dark:bg-primary/10">
@@ -183,6 +207,7 @@ const items = [
         />
       </span>
     ),
+    header: undefined,
   },
   {
     title: "Ruang Kelas Ber-AC",

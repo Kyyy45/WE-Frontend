@@ -15,7 +15,6 @@ export interface User {
   createdAt: string;
 }
 
-// Helper untuk response pagination backend
 export interface UserResponse {
   items: User[];
   meta?: {

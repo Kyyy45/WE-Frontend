@@ -4,12 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   InputOTP,
   InputOTPGroup,
@@ -44,9 +39,7 @@ export function VerifyForm({
   React.useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
+      timer = setInterval(() => setCountdown((prev) => prev - 1), 1000);
     }
     return () => clearInterval(timer);
   }, [countdown]);
@@ -80,9 +73,7 @@ export function VerifyForm({
       router.push("/login");
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        toast.error(
-          error.response?.data?.message || "Kode salah atau kadaluarsa"
-        );
+        toast.error(error.response?.data?.message || "Kode salah/kadaluarsa");
       } else {
         toast.error("Gagal verifikasi");
       }
@@ -91,15 +82,12 @@ export function VerifyForm({
 
   const handleResend = async (e: React.MouseEvent) => {
     e.preventDefault();
-
     if (countdown > 0) return;
-
     if (!emailFromUrl) return toast.error("Email tidak ditemukan");
 
     try {
       await api.post("/auth/activation/send", { email: emailFromUrl });
       toast.success("Kode baru telah dikirim ke email");
-
       setCountdown(60);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -119,10 +107,10 @@ export function VerifyForm({
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              Masukkan kode verifikasi
+              Verifikasi Email
             </h1>
             <p className="text-muted-foreground text-sm md:text-base text-balance">
-              Kami telah mengirimkan kode 6 digit ke email Anda.{" "}
+              Kode 6 digit telah dikirim ke{" "}
               <span className="font-semibold text-foreground block mt-1">
                 {emailFromUrl}
               </span>
@@ -147,32 +135,30 @@ export function VerifyForm({
                   <InputOTPGroup>
                     <InputOTPSlot
                       index={0}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md"
                     />
                     <InputOTPSlot
                       index={1}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input"
                     />
                     <InputOTPSlot
                       index={2}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input"
                     />
                   </InputOTPGroup>
-
                   <InputOTPSeparator />
-
                   <InputOTPGroup>
                     <InputOTPSlot
                       index={3}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input"
                     />
                     <InputOTPSlot
                       index={4}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input"
                     />
                     <InputOTPSlot
                       index={5}
-                      className="h-12 w-12 text-lg font-semibold bg-background border-input first:rounded-l-md last:rounded-r-md"
+                      className="h-12 w-12 text-lg font-semibold bg-background border-input last:rounded-r-md"
                     />
                   </InputOTPGroup>
                 </InputOTP>
@@ -180,39 +166,35 @@ export function VerifyForm({
             />
             <ErrorMsg msg={errors.code?.message} />
 
-            <FieldDescription className="text-center text-xs md:text-sm mt-4 text-muted-foreground">
-              Masukkan kode 6 digit yang dikirimkan ke email Anda.
-            </FieldDescription>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-10 md:h-11 font-semibold text-base mt-4"
+            >
+              {isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Verifikasi"
+              )}
+            </Button>
+
+            <div className="text-center text-sm md:text-base text-muted-foreground mt-4">
+              Tidak menerima kode?{" "}
+              {countdown > 0 ? (
+                <span className="font-medium text-orange-600 block sm:inline transition-colors">
+                  Tunggu {countdown} detik
+                </span>
+              ) : (
+                <a
+                  href="#"
+                  onClick={handleResend}
+                  className="underline hover:text-primary font-medium transition-colors underline-offset-4"
+                >
+                  Kirim Ulang
+                </a>
+              )}
+            </div>
           </Field>
-
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full h-10 md:h-11 font-semibold text-base mt-4"
-          >
-            {isSubmitting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              "Verify"
-            )}
-          </Button>
-
-          <div className="text-center text-sm md:text-base text-muted-foreground mt-4">
-            Tidak menerima kode?{" "}
-            {countdown > 0 ? (
-              <span className="font-medium text-orange-600 block sm:inline transition-colors">
-                Kirim ulang dalam {countdown} detik
-              </span>
-            ) : (
-              <a
-                href="#"
-                onClick={handleResend}
-                className="underline hover:text-primary font-medium transition-colors underline-offset-4"
-              >
-                Kirim Ulang Kode
-              </a>
-            )}
-          </div>
         </FieldGroup>
       </form>
     </div>

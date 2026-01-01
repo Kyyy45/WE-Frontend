@@ -17,7 +17,6 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
   const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
-    // Timeout kecil untuk memastikan hydration state selesai
     const timer = setTimeout(() => {
       // 1. Cek Login
       if (!isAuthenticated || !user) {
@@ -27,7 +26,6 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
 
       // 2. Cek Role
       if (!allowedRoles.includes(user.role)) {
-        // Jika salah kamar, lempar ke dashboard yang sesuai role aslinya
         if (user.role === "admin") {
           router.replace("/dashboard/admin");
         } else {
@@ -42,7 +40,6 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
     return () => clearTimeout(timer);
   }, [isAuthenticated, user, allowedRoles, router]);
 
-  // Tampilkan loading screen selama pengecekan
   if (!isChecked) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">

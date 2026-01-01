@@ -1,10 +1,12 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion, Variants } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Container } from "@/components/layout/container";
 import { SectionWrapper } from "@/components/layout/section-wrapper";
+import { LandingSectionProps } from "@/types/landing";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Testimonial = {
   name: string;
@@ -111,12 +113,7 @@ const scrollUpVariants: Variants = {
   animate: {
     y: ["0%", "-50%"],
     transition: {
-      y: {
-        repeat: Infinity,
-        repeatType: "loop",
-        duration: 40,
-        ease: "linear",
-      },
+      y: { repeat: Infinity, repeatType: "loop", duration: 40, ease: "linear" },
     },
   },
 };
@@ -125,12 +122,7 @@ const scrollDownVariants: Variants = {
   animate: {
     y: ["-50%", "0%"],
     transition: {
-      y: {
-        repeat: Infinity,
-        repeatType: "loop",
-        duration: 40,
-        ease: "linear",
-      },
+      y: { repeat: Infinity, repeatType: "loop", duration: 40, ease: "linear" },
     },
   },
 };
@@ -146,7 +138,9 @@ const chunkArray = (
   return result;
 };
 
-export default function WallOfLoveSection() {
+export default function WallOfLoveSection({
+  isLoading = false,
+}: LandingSectionProps) {
   const testimonialChunks = chunkArray(
     testimonials,
     Math.ceil(testimonials.length / 3)
@@ -155,7 +149,6 @@ export default function WallOfLoveSection() {
   return (
     <SectionWrapper className="bg-background">
       <Container className="py-12 md:py-24">
-        {/* Header Section */}
         <div className="mb-12 md:mb-20 text-center lg:text-left">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground text-balance max-w-4xl mx-auto lg:mx-0">
             Kisah Sukses Siswa Kami
@@ -167,58 +160,68 @@ export default function WallOfLoveSection() {
           </p>
         </div>
 
-        {/* Grid Eskalator */}
-        <div className="relative mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-h-175 overflow-hidden">
-          {testimonialChunks.map((chunk, chunkIndex) => {
-            const isEven = chunkIndex % 2 === 0;
-            const doubledChunk = [...chunk, ...chunk];
-
-            return (
-              <div key={chunkIndex} className="relative h-full">
-                <motion.div
-                  variants={isEven ? scrollUpVariants : scrollDownVariants}
-                  animate="animate"
-                  className="flex flex-col gap-4 md:gap-6"
-                >
-                  {doubledChunk.map((item, index) => (
-                    <Card
-                      key={`${chunkIndex}-${index}`}
-                      className="border border-border bg-card text-card-foreground shadow-sm shrink-0 rounded-3xl"
-                    >
-                      <CardContent className="grid grid-cols-[auto_1fr] gap-4 pt-6">
-                        <Avatar className="size-9 border border-border bg-muted">
-                          <AvatarImage
-                            alt={item.name}
-                            src={item.image}
-                            loading="lazy"
-                          />
-                          <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <h3 className="font-bold text-foreground text-base tracking-tight leading-none">
-                            {item.name}
-                          </h3>
-                          <span className="text-muted-foreground text-xs mt-1">
-                            {item.role}
-                          </span>
-                          <blockquote className="mt-3">
-                            <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                              &quot;{item.quote}&quot;
-                            </p>
-                          </blockquote>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </motion.div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((col) => (
+              <div key={col} className="space-y-6">
+                <Skeleton className="h-48 rounded-3xl" />
+                <Skeleton className="h-64 rounded-3xl" />
               </div>
-            );
-          })}
+            ))}
+          </div>
+        ) : (
+          <div className="relative mt-12 md:mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-h-175 overflow-hidden">
+            {testimonialChunks.map((chunk, chunkIndex) => {
+              const isEven = chunkIndex % 2 === 0;
+              const doubledChunk = [...chunk, ...chunk];
 
-          {/* Gradient Overlays (Tailwind v4 syntax) */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-background via-background/80 to-transparent z-10" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent z-10" />
-        </div>
+              return (
+                <div key={chunkIndex} className="relative h-full">
+                  <motion.div
+                    variants={isEven ? scrollUpVariants : scrollDownVariants}
+                    animate="animate"
+                    className="flex flex-col gap-4 md:gap-6"
+                  >
+                    {doubledChunk.map((item, index) => (
+                      <Card
+                        key={`${chunkIndex}-${index}`}
+                        className="border border-border bg-card text-card-foreground shadow-sm shrink-0 rounded-3xl"
+                      >
+                        <CardContent className="grid grid-cols-[auto_1fr] gap-4 pt-6">
+                          <Avatar className="size-9 border border-border bg-muted">
+                            <AvatarImage
+                              alt={item.name}
+                              src={item.image}
+                              loading="lazy"
+                            />
+                            <AvatarFallback>
+                              {item.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <h3 className="font-bold text-foreground text-base tracking-tight leading-none">
+                              {item.name}
+                            </h3>
+                            <span className="text-muted-foreground text-xs mt-1">
+                              {item.role}
+                            </span>
+                            <blockquote className="mt-3">
+                              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                                &quot;{item.quote}&quot;
+                              </p>
+                            </blockquote>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </motion.div>
+                </div>
+              );
+            })}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-background via-background/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent z-10" />
+          </div>
+        )}
       </Container>
     </SectionWrapper>
   );

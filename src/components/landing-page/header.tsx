@@ -10,6 +10,7 @@ import { ThemeToggleButton } from "../theme/theme-toggle";
 import { motion } from "motion/react";
 import { Container } from "@/components/layout/container";
 import { useAuthStore } from "@/stores/auth-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const menuItems = [
   { name: "Beranda", href: "/" },
@@ -26,11 +27,19 @@ export const Header = () => {
   const { isAuthenticated, user } = useAuthStore();
   const [isMounted, setIsMounted] = useState(false);
 
+  // Logic: Handle hydration mismatch & scroll listener
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
+
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const dashboardLink =
@@ -117,7 +126,6 @@ export const Header = () => {
 
             {/* ACTION AREA */}
             <div className="bg-background lg:bg-transparent in-data-[state=active]:block lg:in-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl p-6 shadow-2xl shadow-primary/10 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent">
-              {/* Mobile Menu List */}
               <div className="lg:hidden">
                 <ul className="space-y-4 text-base">
                   {menuItems.map((item) => (
@@ -136,7 +144,12 @@ export const Header = () => {
 
               {/* AUTH BUTTONS */}
               <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit items-center">
-                {isMounted && isAuthenticated ? (
+                {!isMounted ? (
+                  <div className="flex gap-2">
+                    <Skeleton className="h-9 w-20 rounded-full" />
+                    <Skeleton className="h-9 w-24 rounded-full" />
+                  </div>
+                ) : isAuthenticated ? (
                   <Button
                     asChild
                     size="sm"
@@ -145,7 +158,6 @@ export const Header = () => {
                     <Link href={dashboardLink}>Dashboard</Link>
                   </Button>
                 ) : (
-                  // Tombol Belum Login
                   <>
                     <Button
                       asChild

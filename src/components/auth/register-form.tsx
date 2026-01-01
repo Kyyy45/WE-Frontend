@@ -48,8 +48,6 @@ export function RegisterForm({
     try {
       await api.post("/auth/register", data);
       toast.success("Registrasi berhasil! Cek email untuk kode verifikasi.");
-
-      // Redirect ke verify dengan params email
       router.push(`/verify?email=${encodeURIComponent(data.email)}`);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -69,11 +67,10 @@ export function RegisterForm({
       <FieldGroup>
         <div className="flex flex-col items-center gap-2 text-center mb-2">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-            Buat Akun Worldpedia Education
+            Buat Akun Baru
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Bergabunglah dengan Worldpedia Education dan mulai perjalanan
-            belajar Anda hari ini.
+            Bergabunglah dengan Worldpedia Education hari ini.
           </p>
         </div>
 
@@ -127,8 +124,7 @@ export function RegisterForm({
             className="bg-background h-10 md:h-11"
           />
           <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
-            Kami akan menggunakan email ini untuk menghubungi Anda. Kami tidak
-            akan membagikan email Anda kepada pihak lain.
+            Kami akan mengirimkan kode verifikasi ke email ini.
           </FieldDescription>
           <ErrorMsg msg={errors.email?.message} />
         </Field>
@@ -161,11 +157,9 @@ export function RegisterForm({
               )}
             </button>
           </div>
-
           <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
-            Gunakan minimal 8 karakter, 1 angka, 1 simbol. Mohon buat kata sandi baru untuk akun ini, jangan gunakan kata sandi email pribadi Anda.
+            Minimal 8 karakter, 1 angka, 1 simbol.
           </FieldDescription>
-
           <ErrorMsg msg={errors.password?.message} />
         </Field>
 
@@ -197,9 +191,6 @@ export function RegisterForm({
               )}
             </button>
           </div>
-          <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
-            Silakan masukkan ulang kata sandi Anda untuk konfirmasi.
-          </FieldDescription>
           <ErrorMsg msg={errors.confirmPassword?.message} />
         </Field>
 

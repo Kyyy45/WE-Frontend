@@ -31,13 +31,17 @@ export const getCroppedImg = async (
 
   // Convert canvas ke Blob (File Object)
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Canvas is empty"));
-        return;
-      }
-      resolve(blob);
-    }, "image/jpeg", 0.9); // Quality 90%
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Canvas is empty"));
+          return;
+        }
+        resolve(blob);
+      },
+      "image/jpeg",
+      0.9
+    ); // Quality 90%
   });
 };
 

@@ -130,7 +130,7 @@ export function ForgotPasswordForm({
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              "Send Reset Link"
+              "Kirim Link Reset"
             )}
           </Button>
 

@@ -156,9 +156,6 @@ export function ResetPasswordForm({
               </button>
             </div>
             <ErrorMsg msg={errors.confirmPassword?.message} />
-            <FieldDescription className="text-xs md:text-sm text-muted-foreground mt-1.5 leading-snug">
-              Silakan masukkan ulang kata sandi Anda untuk konfirmasi.
-            </FieldDescription>
           </Field>
 
           <Button
@@ -172,6 +169,7 @@ export function ResetPasswordForm({
               "Reset Password"
             )}
           </Button>
+
           <div className="text-center text-sm md:text-base mt-4">
             <Link
               href="/login"

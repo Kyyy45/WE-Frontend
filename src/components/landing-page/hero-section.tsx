@@ -14,8 +14,12 @@ import { cn } from "@/lib/utils";
 import { Highlighter } from "@/components/ui/highlighter";
 import { Container } from "@/components/layout/container";
 import { SectionWrapper } from "@/components/layout/section-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LandingSectionProps } from "@/types/landing";
 
-export default function HeroSection() {
+export default function HeroSection({
+  isLoading = false,
+}: LandingSectionProps) {
   const items = [
     {
       title: "World-Class Material",
@@ -45,6 +49,29 @@ export default function HeroSection() {
       `,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <Container className="pt-32 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-40 rounded-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <div className="flex gap-4">
+              <Skeleton className="h-12 w-32 rounded-full" />
+              <Skeleton className="h-12 w-32 rounded-full" />
+            </div>
+          </div>
+          <div className="hidden lg:block relative h-full w-full">
+            <Skeleton className="h-96 w-full rounded-3xl" />
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <SectionWrapper>

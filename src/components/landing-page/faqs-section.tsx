@@ -9,6 +9,8 @@ import {
 import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import { Container } from "@/components/layout/container";
 import { SectionWrapper } from "@/components/layout/section-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LandingSectionProps } from "@/types/landing";
 
 type FAQItem = {
   id: string;
@@ -17,7 +19,7 @@ type FAQItem = {
   answer: string;
 };
 
-export default function FAQSection() {
+export default function FAQSection({ isLoading = false }: LandingSectionProps) {
   const faqItems: FAQItem[] = [
     {
       id: "item-1",
@@ -55,6 +57,26 @@ export default function FAQSection() {
         "Ya, setiap siswa yang menyelesaikan program akan mendapatkan sertifikat resmi dari Worldpedia Education sebagai bukti pencapaian level.",
     },
   ];
+
+  if (isLoading) {
+    return (
+      <SectionWrapper>
+        <Container className="py-12">
+          <div className="flex flex-col lg:flex-row gap-16">
+            <div className="lg:w-1/3 space-y-4">
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+            <div className="lg:w-2/3 space-y-4">
+              <Skeleton className="h-24 rounded-3xl" />
+              <Skeleton className="h-24 rounded-3xl" />
+              <Skeleton className="h-24 rounded-3xl" />
+            </div>
+          </div>
+        </Container>
+      </SectionWrapper>
+    );
+  }
 
   return (
     <SectionWrapper className="bg-background">

@@ -1,6 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
+
 import { Container } from "@/components/layout/container";
 import { SectionWrapper } from "@/components/layout/section-wrapper";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LandingSectionProps } from "@/types/landing";
 
 const teachers = [
   {
@@ -20,7 +24,9 @@ const teachers = [
   },
 ];
 
-export default function TeacherSection() {
+export default function TeacherSection({
+  isLoading = false,
+}: LandingSectionProps) {
   return (
     <SectionWrapper className="bg-background">
       <Container className="py-12 md:py-24">
@@ -41,35 +47,45 @@ export default function TeacherSection() {
 
         <div className="mt-12 md:mt-20">
           <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {teachers.map((member, index) => (
-              <div key={index} className="group flex flex-col text-left">
-                <div className="relative overflow-hidden rounded-2xl bg-muted">
-                  <img
-                    className="aspect-4/5 w-full object-cover object-top grayscale transition-all duration-700 ease-in-out group-hover:scale-105 group-hover:grayscale-0"
-                    src={member.avatar}
-                    alt={member.name}
-                    loading="lazy"
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <div className="flex items-center justify-between border-b border-border pb-2">
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight transition-all duration-500 group-hover:text-primary">
-                      {member.name}
-                    </h3>
-                    <span className="text-xs font-mono text-muted-foreground">
-                      / 0{index + 1}
-                    </span>
+            {isLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex flex-col text-left">
+                    <Skeleton className="aspect-4/5 w-full rounded-2xl" />
+                    <div className="mt-6 space-y-3">
+                      <Skeleton className="h-8 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
                   </div>
+                ))
+              : teachers.map((member, index) => (
+                  <div key={index} className="group flex flex-col text-left">
+                    <div className="relative overflow-hidden rounded-2xl bg-muted">
+                      <img
+                        className="aspect-4/5 w-full object-cover object-top grayscale transition-all duration-700 ease-in-out group-hover:scale-105 group-hover:grayscale-0"
+                        src={member.avatar}
+                        alt={member.name}
+                        loading="lazy"
+                      />
+                    </div>
 
-                  <div className="mt-4 flex items-center justify-between overflow-hidden">
-                    <span className="text-sm md:text-base text-muted-foreground translate-y-0 transition-transform duration-500 group-hover:-translate-y-1">
-                      {member.role}
-                    </span>
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between border-b border-border pb-2">
+                        <h3 className="text-xl md:text-2xl font-bold text-foreground tracking-tight transition-all duration-500 group-hover:text-primary">
+                          {member.name}
+                        </h3>
+                        <span className="text-xs font-mono text-muted-foreground">
+                          / 0{index + 1}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-between overflow-hidden">
+                        <span className="text-sm md:text-base text-muted-foreground translate-y-0 transition-transform duration-500 group-hover:-translate-y-1">
+                          {member.role}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
           </div>
         </div>
       </Container>

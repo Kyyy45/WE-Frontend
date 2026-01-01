@@ -38,19 +38,12 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Kirim refreshToken via body agar backend bisa menghapusnya dari DB
-          // meskipun cookie browser diblokir/tidak terkirim.
           const { refreshToken } = get();
           await api.post("/auth/logout", { refreshToken });
         } catch (error) {
-          console.error("Logout server error:", error);
+          console.error("Logout error:", error);
         }
 
-        // Hapus cookie browser secara paksa
-        document.cookie =
-          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; samesite=lax; secure";
-
-        // Reset seluruh state auth
         set({
           user: null,
           accessToken: null,
